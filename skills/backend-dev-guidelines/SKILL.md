@@ -349,6 +349,7 @@ import { envConfigService } from 'src/config/env-config.service';
 | Handle errors           | [async-and-errors.md](resources/async-and-errors.md)                   |
 | Write tests             | [testing-guide.md](resources/testing-guide.md)                         |
 | Add authentication      | [middleware-guide.md](resources/middleware-guide.md)                   |
+| Implement caching       | [redis-caching.md](resources/redis-caching.md)                         |
 | See examples            | [complete-examples.md](resources/complete-examples.md)                 |
 | Error tracking          | [sentry-and-monitoring.md](resources/sentry-and-monitoring.md)         |
 | Generate API docs       | [generate-api-docs.md](resources/generate-api-docs.md)                 |
@@ -396,6 +397,10 @@ Unit/integration tests, mocking, Jest configuration
 ### [sentry-and-monitoring.md](resources/sentry-and-monitoring.md)
 
 Winston logger, error tracking, performance monitoring
+
+### [redis-caching.md](resources/redis-caching.md)
+
+Redis caching with @Cacheable and @CacheInvalidate decorators, TTL strategies, cache key patterns
 
 ### [complete-examples.md](resources/complete-examples.md)
 
