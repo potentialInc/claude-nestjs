@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "description": "NestJS skill triggers",
+  "skills": {
+    "backend-dev-guidelines": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "promptTriggers": {
+        "keywords": ["backend", "nestjs", "api", "service", "controller", "entity", "dto", "module", "guard", "interceptor", "pipe", "decorator", "repository", "typeorm"],
+        "intentPatterns": [
+          "(create|implement|build|add|update|fix).*?(api|endpoint|route|service|controller|module)",
+          "(database|query|entity|migration|seed|repository)",
+          "(swagger|openapi|documentation).*?(api|endpoint)"
+        ]
+      }
+    },
+    "route-tester": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["test route", "test api", "test endpoint", "auth test", "authentication test", "verify route", "debug auth"],
+        "intentPatterns": [
+          "(test|verify|check).*?(route|endpoint|api|authentication)",
+          "(debug|fix).*?(401|403|auth|login)"
+        ]
+      }
+    }
+  }
+}
