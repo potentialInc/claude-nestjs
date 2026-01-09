@@ -247,7 +247,7 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 
 **Related Documentation**:
 
-- [Backend Development Guidelines](../skills/backend-dev-guidelines/SKILL.md)
+- [Backend Development Guidelines](../skills/best-practices.md)
 - [Error Tracking Guide](../skills/error-tracking/SKILL.md)
 - [Route Testing Guide](../skills/route-tester/SKILL.md)
 - [Best Practices](BEST_PRACTICES.md)

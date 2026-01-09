@@ -547,6 +547,6 @@ private extractToken(client: Socket): string | null {
 
 **Related Documentation**:
 
-- [Backend Development Guidelines](../skills/backend-dev-guidelines/SKILL.md)
+- [Backend Development Guidelines](../skills/best-practices.md)
 - [Route Testing Guide](../skills/route-tester/SKILL.md)
 - [Error Tracking Guide](../skills/error-tracking/SKILL.md)

@@ -817,11 +817,12 @@ Using Swagger to test:
 
 ## Related Documentation
 
-- **Backend Dev Guidelines**: [.claude/skills/backend-dev-guidelines/SKILL.md](./../backend-dev-guidelines/SKILL.md)
-    - Controllers: [.claude/skills/backend-dev-guidelines/resources/routing-and-controllers.md](./../backend-dev-guidelines/resources/routing-and-controllers.md)
-    - Validation: [.claude/skills/backend-dev-guidelines/resources/validation-patterns.md](./../backend-dev-guidelines/resources/validation-patterns.md)
+- **Backend Skills**:
+    - Best Practices: [best-practices.md](./best-practices.md)
+    - Controllers: [routing-and-controllers.md](./routing-and-controllers.md)
+    - Validation: [validation-patterns.md](./validation-patterns.md)
 
-- **Error Tracking**: [.claude/skills/error-tracking/SKILL.md](./../error-tracking/SKILL.md)
+- **Error Tracking**: [.claude/base/skills/error-tracking/SKILL.md](../../base/skills/error-tracking/SKILL.md)
 
 - **NestJS Starter Kit**:
     - Auth Module: [src/modules/auth/](./../../src/modules/auth/)
