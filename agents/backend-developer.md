@@ -350,7 +350,7 @@ npm run test:e2e -- --grep "Feature"
 - `.claude-project/docs/PROJECT_KNOWLEDGE.md` - Project knowledge base
 - `.claude-project/docs/PROJECT_DATABASE.md` - Database documentation
 - `.claude-project/docs/PROJECT_API.md` - API documentation
-- `.claude/nestjs/skills/prd-to-knowledge.md` - PRD conversion guide
+- `.claude/nestjs/skills/convert-prd-to-knowledge.md` - PRD conversion guide
 
 ### Testing Infrastructure
 - `backend/test/e2e/` - E2E test examples

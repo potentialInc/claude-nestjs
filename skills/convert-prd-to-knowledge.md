@@ -342,4 +342,4 @@ Before completing, verify:
 
 - [Architecture Overview](architecture-overview.md) - Technical architecture details
 - [Database Patterns](database-patterns.md) - Entity design patterns
-- [Generate API Docs](generate-api-docs.md) - Similar documentation generation pattern
+- [API Docs Generator](api-docs-generator.md) - Similar documentation generation pattern
