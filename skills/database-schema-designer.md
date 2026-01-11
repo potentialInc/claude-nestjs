@@ -2,6 +2,28 @@
 
 Step-by-step guide for designing databases in NestJS applications using TypeORM and PostgreSQL.
 
+---
+
+## Iteration Behavior
+
+This skill is iteration-aware. Behavior changes based on iteration context:
+
+### Iteration 1 (Initial)
+- Full schema design from PRD requirements
+- Create all entities and relationships
+- Generate initial migration: `001-initial-schema`
+
+### Iteration N (Improvement)
+When called with iteration context (e.g., from `/fullstack project --iterate database`):
+
+1. **Read previous state**: Load `PROJECT_DATABASE.md` for current schema
+2. **Compare with new requirements**: Identify new entities, modified fields, new relationships
+3. **Generate incremental migration**: Name as `{iteration}-{description}` (e.g., `002-add-analytics`)
+4. **Preserve backward compatibility**: Add columns as nullable or with defaults
+5. **Update documentation**: Mark changes with iteration number in PROJECT_DATABASE.md
+
+---
+
 ## Table of Contents
 
 - [Step 1: Analyze Requirements](#step-1-analyze-requirements)

@@ -4,6 +4,21 @@ Convert a Product Requirements Document (PRD) PDF into structured `.claude-proje
 
 ---
 
+## Iteration Behavior
+
+This skill is iteration-aware:
+
+### Iteration 1 (Initial)
+- Full extraction from PRD to PROJECT_KNOWLEDGE.md
+
+### Iteration N (Improvement)
+1. **Read both versions**: Current PROJECT_KNOWLEDGE.md AND updated prd.pdf
+2. **Generate diff**: Identify what changed in the PRD
+3. **Update incrementally**: Add new sections, modify changed sections
+4. **Preserve architecture**: Never overwrite the Architecture Overview section
+
+---
+
 ## Purpose
 
 This resource guides the transformation of `prd.pdf` (located in the project root) into structured PROJECT_KNOWLEDGE.md documentation, providing Claude with product context for development tasks.
