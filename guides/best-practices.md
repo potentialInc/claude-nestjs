@@ -1,5 +1,73 @@
 # Backend Best Practices
 
+## CRITICAL RULES (MANDATORY)
+
+### Rule 1: Always Use I18nHelper for All Messages
+
+**NEVER hardcode strings in error messages, success messages, or any user-facing text.**
+
+```typescript
+// ✅ CORRECT: Use I18nHelper for ALL messages
+import { I18nHelper } from '@core/utils';
+
+@Injectable()
+export class MyService extends BaseService<MyEntity> {
+    constructor(
+        private readonly repository: MyRepository,
+        private readonly i18nHelper: I18nHelper, // Always inject I18nHelper
+    ) {
+        super(repository, 'MyEntity');
+    }
+
+    async findById(id: string): Promise<MyEntity> {
+        const entity = await this.repository.findById(id);
+        if (!entity) {
+            throw new NotFoundException(
+                this.i18nHelper.t('translation.my_module.error.not_found'),
+            );
+        }
+        return entity;
+    }
+}
+
+// ❌ WRONG: Hardcoded error messages - NEVER DO THIS
+throw new NotFoundException('Entity not found');
+throw new BadRequestException('Invalid input');
+throw new ConflictException('Already exists');
+```
+
+**Translation key structure**: `translation.<module>.<type>.<key>`
+- `<module>`: `user_management`, `authentication`, `match`, `wallet`, etc.
+- `<type>`: `success`, `error`, `info`
+- `<key>`: `not_found`, `created_successfully`, etc.
+
+**When adding new messages**:
+1. Check if key exists in `backend/src/i18n/en/translation.json`
+2. Add to BOTH `en/translation.json` and `ko/translation.json`
+3. Include `I18nHelper` in module providers
+
+### Rule 2: Check Existing APIs Before Creating New Ones
+
+**Before creating any new API endpoint, you MUST search for existing endpoints.**
+
+```bash
+# Search for existing endpoints
+grep -r "@Get\|@Post\|@Put\|@Patch\|@Delete" backend/src/modules/ --include="*.controller.ts"
+```
+
+| Frontend Need | Check First |
+|---------------|-------------|
+| Get user profile | `GET /users/:id` or `GET /users/me` |
+| Update user | `PATCH /users/:id` |
+| Get list with filters | Existing `GET /` with query params |
+
+**Only create new endpoint when**:
+- Operation is fundamentally different
+- Business logic is completely distinct
+- Access control requirements differ
+
+---
+
 ## NestJS Coding Standards
 
 ### General Principles
