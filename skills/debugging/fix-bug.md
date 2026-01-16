@@ -1,3 +1,11 @@
+---
+skill_name: debugging
+applies_to_local_project_only: true
+auto_trigger_regex: [fix bug, debug, nestjs error, typescript error, 500 error, 400 error, typeorm error, injection error, troubleshoot, bug fix]
+tags: [debugging, nestjs, errors, troubleshooting, http-exceptions, typeorm]
+related_skills: [backend-dev-guidelines, e2e-testing]
+---
+
 # Fix NestJS Bug Guide
 
 Structured approach to debugging and fixing bugs in NestJS applications.

@@ -1,3 +1,11 @@
+---
+skill_name: organize-types
+applies_to_local_project_only: true
+auto_trigger_regex: [organize types, typescript types, type organization, dto types, entity types, barrel exports, refactor types, type structure]
+tags: [code-quality, typescript, types, organization, refactoring, dto, entity]
+related_skills: [backend-dev-guidelines]
+---
+
 # Organize Types - NestJS
 
 Analyze and maintain TypeScript type organization in NestJS backend codebase.
