@@ -263,8 +263,8 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 **Related Documentation**:
 
 - [Backend Development Guidelines](../skills/best-practices.md)
-- [Error Tracking Guide](../skills/error-tracking/SKILL.md)
-- [Route Testing Guide](../skills/route-tester/SKILL.md)
+- [Error Tracking Guide](../invocable/track-errors/SKILL.md)
+- [Route Testing Guide](../invocable/test-routes.md)
 - [Best Practices](BEST_PRACTICES.md)
 - [Troubleshooting Guide](TROUBLESHOOTING.md)
 ```
@@ -357,4 +357,4 @@ Before completing, verify:
 
 - [Architecture Overview](architecture-overview.md) - Technical architecture details
 - [Database Patterns](database-patterns.md) - Entity design patterns
-- [API Docs Generator](api-docs-generator.md) - Similar documentation generation pattern
+- [API Docs Generator](generate-api-docs.md) - Similar documentation generation pattern

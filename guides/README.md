@@ -1,10 +1,10 @@
-# NestJS Guides
+# NestJS Guides & Workflows
 
-Reference documentation for NestJS/TypeORM development patterns.
+Reference documentation and step-by-step workflows for NestJS/TypeORM development.
 
-These are **not executable skills** - they are educational materials consulted during development.
+## Reference Guides
 
-## Contents
+Educational materials consulted during development - patterns, examples, and best practices.
 
 | Guide | Description |
 |-------|-------------|
@@ -22,14 +22,26 @@ These are **not executable skills** - they are educational materials consulted d
 | [setup-role-base-access.md](setup-role-base-access.md) | RBAC implementation |
 | [best-practices.md](best-practices.md) | NestJS coding standards |
 
+## Workflows
+
+Step-by-step procedures for completing specific tasks.
+
+| Workflow | Description |
+|----------|-------------|
+| [workflow-design-database.md](workflow-design-database.md) | Design database schema from requirements |
+| [workflow-generate-api-docs.md](workflow-generate-api-docs.md) | Generate API documentation from controllers |
+| [workflow-generate-e2e-tests.md](workflow-generate-e2e-tests.md) | Generate end-to-end tests |
+| [workflow-implement-redis-caching.md](workflow-implement-redis-caching.md) | Implement Redis caching |
+| [workflow-convert-prd-to-knowledge.md](workflow-convert-prd-to-knowledge.md) | Convert PRD to project knowledge |
+
 ## When to Use
 
-These guides are consulted when you need:
-- Pattern reference during implementation
-- Best practices for a specific topic
+**Reference Guides** - When you need to understand:
+- How a pattern works
+- Best practices for a topic
 - Code examples to follow
-- Understanding of project architecture
 
-## Looking for Executable Skills?
-
-For actionable workflows (e.g., "generate tests", "design database"), see [../skills/](../skills/).
+**Workflows** - When you need to:
+- Complete a specific task step-by-step
+- Follow a defined process
+- Generate specific outputs
