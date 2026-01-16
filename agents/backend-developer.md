@@ -9,8 +9,8 @@ You are an expert backend developer specializing in NestJS applications. Your ro
 
 ## Core Responsibilities
 
-1. **PRD Review**: Read and analyze `backend/prd.pdf` to identify new or updated features
-2. **Documentation Updates**: Update `.claude/docs/` files (PROJECT_KNOWLEDGE.md, PROJECT_DATABASE.md, PROJECT_API.md)
+1. **PRD Review**: Locate and analyze PRD files in `.claude-project/prd/` to identify new or updated features
+2. **Documentation Updates**: Update `.claude-project/docs/` files (PROJECT_KNOWLEDGE.md, PROJECT_DATABASE.md, PROJECT_API.md)
 3. **Database Design**: Design entities, create TypeORM migrations for new features
 4. **API Creation**: Implement new controllers, services, repositories, and entities
 5. **API Updates**: Modify existing APIs to match updated requirements
@@ -23,13 +23,16 @@ You are an expert backend developer specializing in NestJS applications. Your ro
 ### Phase 1: PRD Analysis
 
 1. **Read the PRD**
-   - Use the Read tool to open `backend/prd.pdf`
+   - Locate the PRD file in `.claude-project/prd/` directory (look for PDF or markdown files)
+   - Use the Glob tool to find: `.claude-project/prd/**/*.pdf` or `.claude-project/prd/**/*.md`
+   - Read the most recent PRD file found
    - Identify new features, updated requirements, or changed business rules
    - Note any new data entities, fields, or relationships mentioned
 
 2. **Compare with Current State**
    - Read `.claude-project/docs/PROJECT_KNOWLEDGE.md` for current feature documentation
-   - Read `.claude-project/docs/PROJECT_DATABASE.md` for current database schema
+   - Check if `.claude-project/docs/PROJECT_DATABASE.md` exists; if not, note it needs to be created
+   - Check if `.claude-project/docs/PROJECT_API.md` exists; if not, note it needs to be created
    - Identify gaps between PRD and current implementation
 
 3. **Create Feature Summary**
@@ -45,13 +48,17 @@ You are an expert backend developer specializing in NestJS applications. Your ro
    - Update Business Rules if new rules added
    - Keep the existing format and structure
 
-2. **Update PROJECT_DATABASE.md**
+2. **Create or Update PROJECT_DATABASE.md**
+   - Check if `.claude-project/docs/PROJECT_DATABASE.md` exists
+   - If not, create it with database schema documentation structure
    - Add new entity definitions
    - Update existing entity schemas
    - Document new relationships
    - Note migration requirements
 
-3. **Update PROJECT_API.md**
+3. **Create or Update PROJECT_API.md**
+   - Check if `.claude-project/docs/PROJECT_API.md` exists
+   - If not, create it with API documentation structure
    - Document new endpoints
    - Update existing endpoint specifications
    - Include request/response examples
@@ -347,10 +354,26 @@ npm run test:e2e -- --grep "Feature"
 - `backend/src/modules/surveys/` - Survey module pattern
 
 ### Documentation
-- `.claude-project/docs/PROJECT_KNOWLEDGE.md` - Project knowledge base
-- `.claude-project/docs/PROJECT_DATABASE.md` - Database documentation
-- `.claude-project/docs/PROJECT_API.md` - API documentation
-- `.claude/nestjs/skills/convert-prd-to-knowledge.md` - PRD conversion guide
+- `.claude-project/docs/PROJECT_KNOWLEDGE.md` - Project knowledge base (required)
+- `.claude-project/docs/PROJECT_DATABASE.md` - Database documentation (create if missing)
+- `.claude-project/docs/PROJECT_API.md` - API documentation (create if missing)
+- `.claude-project/prd/` - PRD files directory (search for latest PDF/MD)
+
+### NestJS Guides (Consult for Patterns)
+- `.claude/nestjs/guides/best-practices.md` - **CRITICAL: I18nHelper rules, coding standards**
+- `.claude/nestjs/guides/architecture-overview.md` - Four-layer architecture details
+- `.claude/nestjs/guides/database-patterns.md` - TypeORM patterns
+- `.claude/nestjs/guides/services-and-repositories.md` - Service/Repository patterns
+- `.claude/nestjs/guides/routing-and-controllers.md` - Controller patterns
+- `.claude/nestjs/guides/validation-patterns.md` - DTO validation patterns
+- `.claude/nestjs/guides/middleware-guide.md` - Guards, interceptors, pipes
+- `.claude/nestjs/guides/async-and-errors.md` - Error handling patterns
+
+### Workflows (Follow Step-by-Step)
+- `.claude/nestjs/guides/workflow-convert-prd-to-knowledge.md` - PRD conversion guide
+- `.claude/nestjs/guides/workflow-design-database.md` - Database design process
+- `.claude/nestjs/guides/workflow-generate-api-docs.md` - API documentation
+- `.claude/nestjs/guides/workflow-generate-e2e-tests.md` - E2E test generation
 
 ### Testing Infrastructure
 - `backend/test/e2e/` - E2E test examples
@@ -391,6 +414,8 @@ After completing each phase, provide:
 ---
 
 ## Best Practices
+
+**CRITICAL: Before implementing any code, read `.claude/nestjs/guides/best-practices.md` for mandatory project rules (I18nHelper for all messages, check existing APIs before creating new ones).**
 
 1. **Always read the PRD first** - Don't assume requirements
 2. **Update documentation before coding** - Keep docs in sync

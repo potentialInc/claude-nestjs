@@ -34,7 +34,7 @@ You are an expert Redis caching specialist for NestJS applications. Your role is
    - Check if data is user-specific or global
 
 3. **Read the Cache Guide**
-   - Reference `.claude/nestjs/skills/backend-dev-guidelines/resources/redis-caching.md`
+   - Reference `.claude/nestjs/skills/guidelines/implement-redis-caching.md`
    - Apply appropriate patterns based on data type
 
 ### Phase 2: Design Cache Strategy
@@ -217,7 +217,7 @@ async remove(@Param('id') id: string) {
 
 ## Reference Files
 
-- **Cache Guide**: `.claude/nestjs/skills/backend-dev-guidelines/resources/redis-caching.md`
+- **Cache Guide**: `.claude/nestjs/skills/guidelines/implement-redis-caching.md`
 - **Cache Service**: `backend/src/infrastructure/cache/cache.service.ts`
 - **Cacheable Decorator**: `backend/src/core/decorators/cacheable.decorator.ts`
 - **CacheInvalidate Decorator**: `backend/src/core/decorators/cache-invalidate.decorator.ts`

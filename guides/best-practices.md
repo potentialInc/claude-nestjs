@@ -490,6 +490,56 @@ curl -s -X GET 'http://localhost:3000/posts/published' \
   | python3 -m json.tool
 ```
 
+## Redis Caching Best Practices
+
+### What to Cache
+
+| Data Type | TTL | Example |
+|-----------|-----|---------|
+| Static catalogs | `'catalog'` (1h) | Exercises, products, features |
+| Entity lists | `'list'` (30m) | Users, assignments, meetings |
+| Computed stats | `'stats'` (15m) | Dashboard, aggregates |
+| User-specific | `'default'` (5m) | Profiles, preferences |
+| Real-time | NEVER | Notifications, live status |
+
+### DO
+
+```typescript
+// Cache GET endpoints with appropriate TTL
+@Get()
+@Cacheable({ key: 'exercises:all', ttl: 'catalog' })
+async findAll() { ... }
+
+// Invalidate on mutations
+@Post()
+@CacheInvalidate({ patterns: ['exercises:*'] })
+async create(@Body() dto: CreateDto) { ... }
+
+// Use userAware for user-specific data
+@Cacheable({ key: 'profile', ttl: 'default', userAware: true })
+```
+
+### DON'T
+
+```typescript
+// Don't cache mutation endpoints
+@Post()
+@Cacheable({ key: 'result' })  // WRONG!
+async create() { ... }
+
+// Don't forget to invalidate related caches
+@Patch(':id')
+// Missing @CacheInvalidate!
+async update() { ... }
+
+// Don't use overly long TTLs for dynamic data
+@Cacheable({ key: 'notifications', ttl: 3600 })  // Too long!
+```
+
+See [workflow-implement-redis-caching.md](workflow-implement-redis-caching.md) for complete documentation.
+
+---
+
 ## Socket.IO (WebSocket) Best Practices
 
 ### Backend Gateway Pattern
