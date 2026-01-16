@@ -10,8 +10,22 @@ Claude Code configuration for NestJS backend development. This is a framework-sp
 - **auth-route-tester.md** - Test routes after implementing or modifying them
 
 ### Skills
-- **backend-dev-guidelines/** - NestJS four-layer architecture, TypeORM, class-validator, JWT auth
-- **route-tester/** - JWT cookie-based authentication testing patterns
+
+```
+skills/
+├── skill-rules.json           # Skill trigger configuration
+├── invocable/                 # Invocable skills (with YAML metadata)
+│   ├── test-routes.md         # JWT authentication testing patterns
+│   └── track-errors/          # Sentry error tracking integration
+│       └── SKILL.md
+├── guidelines/                # Step-by-step instruction guides
+│   ├── generate-api-docs.md   # API documentation generation
+│   ├── generate-e2e-tests.md  # E2E test generation
+│   ├── design-database-schema.md  # Database design with TypeORM
+│   └── convert-prd-to-knowledge.md  # PRD to knowledge conversion
+└── resources/                 # Reference documentation
+    └── implement-redis-caching.md  # Redis caching patterns
+```
 
 ### Hooks
 - **tsc-check.sh** - TypeScript compilation checking for backend services
