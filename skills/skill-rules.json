@@ -51,23 +51,43 @@
         ]
       }
     },
-    "e2e-testing": {
+    "jest-fixtures": {
       "type": "domain",
       "enforcement": "suggest",
       "priority": "medium",
+      "file": "e2e-testing/jest-fixtures.md",
       "promptTriggers": {
-        "keywords": ["e2e test", "jest fixtures", "supertest", "test fixtures", "integration test", "nestjs testing", "e2e-spec"],
+        "keywords": ["jest fixtures", "test fixtures", "nestjs fixtures", "test data", "test factory", "test setup"],
         "intentPatterns": [
-          "(create|add|write).*?(e2e|jest|integration).*?(fixture|test)",
-          "(test|testing).*?(module|setup|fixture)",
-          "supertest.*?(pattern|test)"
+          "(create|add|write).*?(jest|test).*?fixture",
+          "fixture.*?(pattern|setup|factory)",
+          "(test|testing).*?(module|setup|fixture)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/test/fixtures/**/*.ts",
+          "**/test/setup/**/*.ts"
+        ]
+      }
+    },
+    "supertest-patterns": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "file": "e2e-testing/supertest-patterns.md",
+      "promptTriggers": {
+        "keywords": ["supertest", "api testing", "e2e api", "http test", "endpoint testing", "e2e-spec"],
+        "intentPatterns": [
+          "(create|add|write).*?supertest",
+          "(api|http|endpoint).*?test",
+          "(create|add|write).*?e2e.*?test"
         ]
       },
       "fileTriggers": {
         "pathPatterns": [
           "**/test/**/*.e2e-spec.ts",
-          "**/test/**/*.spec.ts",
-          "**/test/fixtures/**/*.ts"
+          "**/test/e2e/**/*.ts"
         ]
       }
     }
