@@ -6,6 +6,7 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
+      "file": "../agents/backend-developer.md",
       "promptTriggers": {
         "keywords": ["backend", "nestjs", "api", "service", "controller", "entity", "dto", "module", "guard", "interceptor", "pipe", "decorator", "repository", "typeorm"],
         "intentPatterns": [
@@ -14,6 +15,72 @@
           "(swagger|openapi|documentation).*?(api|endpoint)"
         ]
       }
+    },
+    "debugging": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "file": "debugging/fix-bug.md",
+      "promptTriggers": {
+        "keywords": ["fix bug", "debug", "nestjs error", "typescript error", "500 error", "400 error", "typeorm error", "injection error"],
+        "intentPatterns": [
+          "(fix|debug|solve|resolve).*?bug",
+          "(nestjs|typescript|typeorm).*?error",
+          "troubleshoot.*?(issue|problem|error)"
+        ]
+      }
+    },
+    "code-quality": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "file": "code-quality/organize-types.md",
+      "promptTriggers": {
+        "keywords": ["organize types", "typescript types", "type organization", "dto types", "entity types", ".d.ts", "barrel exports"],
+        "intentPatterns": [
+          "(organize|clean|refactor|centralize).*?types",
+          "type.*?(organization|structure|cleanup)",
+          "(dto|entity).*?types"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/dto/**/*.ts",
+          "**/entities/**/*.ts",
+          "**/types/**/*.ts"
+        ]
+      }
+    },
+    "e2e-testing": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "promptTriggers": {
+        "keywords": ["e2e test", "jest fixtures", "supertest", "test fixtures", "integration test", "nestjs testing", "e2e-spec"],
+        "intentPatterns": [
+          "(create|add|write).*?(e2e|jest|integration).*?(fixture|test)",
+          "(test|testing).*?(module|setup|fixture)",
+          "supertest.*?(pattern|test)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/test/**/*.e2e-spec.ts",
+          "**/test/**/*.spec.ts",
+          "**/test/fixtures/**/*.ts"
+        ]
+      }
     }
+  },
+  "guides": {
+    "_note": "Reference documents in ../guides/",
+    "architecture-overview": "../guides/architecture-overview.md",
+    "async-and-errors": "../guides/async-and-errors.md",
+    "best-practices": "../guides/best-practices.md",
+    "database-patterns": "../guides/database-patterns.md",
+    "testing-guide": "../guides/testing-guide.md",
+    "validation-patterns": "../guides/validation-patterns.md",
+    "middleware-guide": "../guides/middleware-guide.md",
+    "services-and-repositories": "../guides/services-and-repositories.md"
   }
 }
