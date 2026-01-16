@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "description": "NestJS skill triggers",
+  "description": "NestJS skill triggers - consolidated structure",
   "skills": {
     "backend-dev-guidelines": {
       "type": "domain",
@@ -22,7 +22,7 @@
       "priority": "medium",
       "file": "debugging/fix-bug.md",
       "promptTriggers": {
-        "keywords": ["fix bug", "debug", "nestjs error", "typescript error", "500 error", "400 error", "typeorm error", "injection error"],
+        "keywords": ["fix bug", "debug", "nestjs error", "typescript error", "500 error", "400 error", "typeorm error", "injection error", "troubleshoot", "bug fix"],
         "intentPatterns": [
           "(fix|debug|solve|resolve).*?bug",
           "(nestjs|typescript|typeorm).*?error",
@@ -30,13 +30,13 @@
         ]
       }
     },
-    "code-quality": {
+    "organize-types": {
       "type": "domain",
       "enforcement": "suggest",
       "priority": "medium",
       "file": "code-quality/organize-types.md",
       "promptTriggers": {
-        "keywords": ["organize types", "typescript types", "type organization", "dto types", "entity types", ".d.ts", "barrel exports"],
+        "keywords": ["organize types", "typescript types", "type organization", "dto types", "entity types", "barrel exports", "refactor types", "type structure"],
         "intentPatterns": [
           "(organize|clean|refactor|centralize).*?types",
           "type.*?(organization|structure|cleanup)",
@@ -51,43 +51,50 @@
         ]
       }
     },
-    "jest-fixtures": {
+    "e2e-testing": {
       "type": "domain",
       "enforcement": "suggest",
-      "priority": "medium",
-      "file": "e2e-testing/jest-fixtures.md",
+      "priority": "high",
+      "file": "e2e-testing/SKILL.md",
       "promptTriggers": {
-        "keywords": ["jest fixtures", "test fixtures", "nestjs fixtures", "test data", "test factory", "test setup"],
+        "keywords": [
+          "e2e test",
+          "e2e-test",
+          "end-to-end test",
+          "generate test",
+          "create test",
+          "write test",
+          "test generator",
+          "integration test",
+          "test controller",
+          "test endpoint",
+          "test api",
+          "jest fixtures",
+          "test fixtures",
+          "test data",
+          "test factory",
+          "test setup",
+          "supertest",
+          "api testing",
+          "http test",
+          "endpoint testing"
+        ],
         "intentPatterns": [
+          "(generate|create|write|add).*?(e2e|end-to-end|test|spec)",
+          "(test|testing).*?(controller|endpoint|route|api|module)",
+          "(finish|complete|done|implement).*?(controller|endpoint|api)",
           "(create|add|write).*?(jest|test).*?fixture",
           "fixture.*?(pattern|setup|factory)",
-          "(test|testing).*?(module|setup|fixture)"
+          "(api|http|endpoint).*?test"
         ]
       },
       "fileTriggers": {
         "pathPatterns": [
+          "backend/test/**/*.ts",
+          "backend/test/e2e/**/*.ts",
+          "**/test/**/*.e2e-spec.ts",
           "**/test/fixtures/**/*.ts",
           "**/test/setup/**/*.ts"
-        ]
-      }
-    },
-    "supertest-patterns": {
-      "type": "domain",
-      "enforcement": "suggest",
-      "priority": "medium",
-      "file": "e2e-testing/supertest-patterns.md",
-      "promptTriggers": {
-        "keywords": ["supertest", "api testing", "e2e api", "http test", "endpoint testing", "e2e-spec"],
-        "intentPatterns": [
-          "(create|add|write).*?supertest",
-          "(api|http|endpoint).*?test",
-          "(create|add|write).*?e2e.*?test"
-        ]
-      },
-      "fileTriggers": {
-        "pathPatterns": [
-          "**/test/**/*.e2e-spec.ts",
-          "**/test/e2e/**/*.ts"
         ]
       }
     }
