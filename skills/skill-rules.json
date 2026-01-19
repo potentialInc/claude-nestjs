@@ -97,6 +97,36 @@
           "**/test/setup/**/*.ts"
         ]
       }
+    },
+    "api-development": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "file": "api-development/SKILL.md",
+      "promptTriggers": {
+        "keywords": [
+          "api development",
+          "develop api",
+          "create api",
+          "implement api",
+          "build endpoint",
+          "create endpoint",
+          "backend api",
+          "nestjs api",
+          "controller service",
+          "create controller",
+          "create service",
+          "typeorm entity",
+          "prd to api",
+          "new feature backend"
+        ],
+        "intentPatterns": [
+          "(develop|create|implement|build).*?(api|endpoint|route|controller)",
+          "(create|add|implement).*?(service|repository|entity)",
+          "prd.*?(implementation|api|backend)",
+          "(nestjs|typeorm).*?(api|endpoint|controller)"
+        ]
+      }
     }
   },
   "guides": {
