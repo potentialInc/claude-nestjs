@@ -127,6 +127,42 @@
           "(nestjs|typeorm).*?(api|endpoint|controller)"
         ]
       }
+    },
+    "database-seeding": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "file": "database-seeding/SKILL.md",
+      "promptTriggers": {
+        "keywords": [
+          "seed",
+          "seeder",
+          "database seed",
+          "create seed",
+          "test data",
+          "fixture data",
+          "seed users",
+          "seed database",
+          "populate database",
+          "sample data",
+          "mock data",
+          "seed file"
+        ],
+        "intentPatterns": [
+          "(create|generate|add|write).*?seed",
+          "(seed|populate).*?(database|data|users|categories)",
+          "test.*?data",
+          "(fixture|mock).*?data",
+          "database.*?(initialization|setup|populate)"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": [
+          "**/database/seeders/**/*.ts",
+          "**/seeds/**/*.ts",
+          "**/*.seed.ts"
+        ]
+      }
     }
   },
   "guides": {
