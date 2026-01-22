@@ -9,6 +9,7 @@ Complete guide to managing configuration in backend microservices.
 - [Configuration Structure](#configuration-structure)
 - [Environment-Specific Configs](#environment-specific-configs)
 - [Secrets Management](#secrets-management)
+- [JWT Token Configuration](#jwt-token-configuration)
 - [Migration Guide](#migration-guide)
 
 ---
@@ -247,6 +248,120 @@ export const config: UnifiedConfig = {
 
 ---
 
+## JWT Token Configuration
+
+### Token Expiration Time Formats
+
+The JWT library (`jsonwebtoken`) supports multiple formats for expiration times:
+
+```bash
+# ✅ GOOD: String time formats (recommended)
+AUTH_TOKEN_EXPIRED_TIME=24h          # 24 hours
+AUTH_REFRESH_TOKEN_EXPIRED_TIME=7d   # 7 days
+AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME=30d  # 30 days
+
+# ✅ GOOD: Numeric values (seconds)
+AUTH_TOKEN_EXPIRED_TIME=86400        # 24 hours in seconds
+AUTH_REFRESH_TOKEN_EXPIRED_TIME=604800  # 7 days in seconds
+```
+
+### Common JWT Configuration Pitfall
+
+**❌ WRONG: Treating string time formats as numbers**
+
+```typescript
+// This is WRONG - will cause 500 errors
+getAccessToken(payload: IJwtPayload) {
+    const expiresIn = this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME');
+    const expiresInNumber = Number(expiresIn);  // "24h" → NaN!
+
+    if (isNaN(expiresInNumber)) {
+        throw new Error('Invalid JWT expiry time');  // Will always fail for "24h"
+    }
+
+    return this.jwtService.sign(payload, { expiresIn: expiresInNumber });
+}
+```
+
+**✅ CORRECT: Pass the value directly to JWT library**
+
+```typescript
+// JWT library handles both numeric and string formats natively
+getAccessToken(payload: IJwtPayload) {
+    const expiresIn = this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME');
+
+    if (!expiresIn) {
+        throw new Error('JWT expiry time not configured. Check your .env file.');
+    }
+
+    // JWT library supports: "24h", "7d", "30m", 3600 (seconds), etc.
+    return this.jwtService.sign(payload, { expiresIn });
+}
+```
+
+### Supported Time Formats
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| Seconds | `3600` | Numeric seconds |
+| Minutes | `"30m"` | 30 minutes |
+| Hours | `"24h"` | 24 hours |
+| Days | `"7d"` | 7 days |
+| Weeks | `"2w"` | 2 weeks |
+| Years | `"1y"` | 1 year |
+
+### Environment File Example
+
+```bash
+# .env - JWT Configuration
+AUTH_JWT_SECRET="your-secure-secret-here"
+AUTH_TOKEN_COOKIE_NAME="AuthToken"
+AUTH_TOKEN_EXPIRED_TIME=24h
+AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME=30d
+AUTH_REFRESH_TOKEN_COOKIE_NAME="RefreshToken"
+AUTH_REFRESH_TOKEN_EXPIRED_TIME=7d
+```
+
+### Token Service Best Practice
+
+```typescript
+// src/infrastructure/token/token.service.ts
+@Injectable()
+export class TokenService {
+    constructor(
+        private jwtService: JwtService,
+        private configService: ConfigService,
+    ) {}
+
+    getAccessToken(payload: IJwtPayload, rememberMe?: boolean): string {
+        const expiresIn = rememberMe
+            ? this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME')
+            : this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME');
+
+        if (!expiresIn) {
+            throw new Error('JWT expiry time not configured. Check your .env file.');
+        }
+
+        // JWT library natively supports string time formats
+        return this.jwtService.sign(payload, { expiresIn });
+    }
+
+    getRefreshToken(payload: IJwtPayload): string {
+        const refreshExpiresIn = this.configService.get<string>(
+            'AUTH_REFRESH_TOKEN_EXPIRED_TIME',
+        );
+
+        if (!refreshExpiresIn) {
+            throw new Error('JWT refresh expiry time not configured.');
+        }
+
+        return this.jwtService.sign(payload, { expiresIn: refreshExpiresIn });
+    }
+}
+```
+
+---
+
 ## Migration Guide
 
 ### Find All process.env Usage
@@ -289,3 +404,4 @@ const jwtSecret = config.tokens.jwt;
 
 - [SKILL.md](SKILL.md)
 - [testing-guide.md](testing-guide.md)
+- [async-and-errors.md](async-and-errors.md)
