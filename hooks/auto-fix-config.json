@@ -1,0 +1,13 @@
+{
+  "projects": [
+    {
+      "name": "backend",
+      "path": "backend",
+      "lintCommand": "npm run lint",
+      "formatCommand": "npm run format",
+      "typeCheckCommand": "npm run type-check",
+      "patterns": ["**/*.ts"]
+    }
+  ],
+  "triggerAutoResolver": true
+}
