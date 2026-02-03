@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "excludePaths": [
+    "backend/src/database/migrations",
+    "backend/src/core",
+    "backend/src/shared",
+    "backend/src/infrastructure",
+    "backend/src/config"
+  ],
+  "excludePatterns": [
+    "*.config.ts",
+    "*.constants.ts",
+    "*.enum.ts",
+    "**/index.ts",
+    "main.ts",
+    "*.module.ts"
+  ],
+  "excludeRecentFiles": true,
+  "recentFileThresholdHours": 24,
+  "dryRun": false,
+  "logLevel": "info",
+  "scanPaths": [
+    "backend/src/modules"
+  ]
+}

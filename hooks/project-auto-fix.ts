@@ -29,6 +29,7 @@ interface HookInput {
           input: {
             file_path?: string;
             edits?: Array<{ file_path: string }>;
+            subagent_type?: string;
           };
         };
       }>;
@@ -206,6 +207,68 @@ function extractTypeErrors(output: string): string[] {
   return errorLines;
 }
 
+function detectBackendDeveloperUsage(input: HookInput): boolean {
+  if (!input.transcript) {
+    return false;
+  }
+
+  for (const item of input.transcript) {
+    if (item.type !== 'assistant' || !item.message?.content) {
+      continue;
+    }
+
+    for (const content of item.message.content) {
+      if (content.type !== 'tool_use' || !content.tool_use) {
+        continue;
+      }
+
+      const { name, input: toolInput } = content.tool_use;
+
+      // Check if Task tool was used with backend-developer subagent
+      if (name === 'Task' && toolInput.subagent_type === 'backend-developer') {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function runCleanup(
+  projectDir: string,
+  sessionId: string
+): { success: boolean; output: string } {
+  const cleanupScriptPath = resolve(
+    projectDir,
+    '.claude/nestjs/hooks/backend-cleanup.js'
+  );
+
+  if (!existsSync(cleanupScriptPath)) {
+    return { success: false, output: 'Cleanup script not found' };
+  }
+
+  try {
+    // Prepare input for cleanup script
+    const cleanupInput = JSON.stringify({ session_id: sessionId });
+
+    const output = execSync(`node "${cleanupScriptPath}"`, {
+      cwd: projectDir,
+      encoding: 'utf-8',
+      input: cleanupInput,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000, // 1 minute timeout
+    });
+
+    return { success: true, output: output || '' };
+  } catch (error: unknown) {
+    const execError = error as { stdout?: string; stderr?: string };
+    return {
+      success: false,
+      output: (execError.stdout || '') + (execError.stderr || ''),
+    };
+  }
+}
+
 // --- Main Function ---
 
 function main() {
@@ -214,10 +277,11 @@ function main() {
     let data: HookInput;
 
     try {
-      data = JSON.parse(input);
+      data = JSON.parse(input) as HookInput;
     } catch {
       // If parsing fails, exit silently (no stdin data)
       process.exit(0);
+      return; // For TypeScript control flow analysis
     }
 
     const config = loadConfig();
@@ -335,6 +399,24 @@ function main() {
       console.error(
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
       );
+
+      // Check if backend-developer was used and backend project was affected
+      const usedBackendDev = detectBackendDeveloperUsage(data);
+      const backendAffected = affectedProjects.some((p) => p.name === 'backend');
+
+      if (usedBackendDev && backendAffected) {
+        // Run cleanup for backend files
+        const cleanupResult = runCleanup(projectDir, data.session_id);
+
+        if (!cleanupResult.success) {
+          // Cleanup failed, but don't block - just log
+          if (process.env.DEBUG) {
+            console.error(`[auto-fix] Cleanup warning: ${cleanupResult.output}`);
+          }
+        }
+        // Cleanup output is already printed to stderr by the cleanup script
+      }
+
       process.exit(0);
     }
   } catch (error) {
