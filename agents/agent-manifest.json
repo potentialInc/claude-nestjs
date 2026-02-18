@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "stack": "nestjs",
+  "agents": {
+    "backend-developer": {
+      "file": "backend-developer.md",
+      "model": "opus",
+      "tier": "high",
+      "domain": "backend",
+      "roles": ["implementer", "debugger", "documenter"],
+      "description": "End-to-end NestJS development from PRD to tested API"
+    },
+    "code-architecture-reviewer": {
+      "file": "code-architecture-reviewer.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["reviewer"],
+      "description": "Review NestJS code for architectural consistency"
+    },
+    "auth-route-debugger": {
+      "file": "auth-route-debugger.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["debugger"],
+      "description": "Debug authentication and route issues"
+    },
+    "refactor-planner": {
+      "file": "refactor-planner.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["planner"],
+      "description": "Plan NestJS-specific refactoring strategies"
+    },
+    "documentation-architect": {
+      "file": "documentation-architect.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["documenter"],
+      "description": "Document NestJS modules and APIs"
+    },
+    "cache-manager": {
+      "file": "cache-manager.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["implementer"],
+      "description": "Manage caching strategies"
+    }
+  }
+}

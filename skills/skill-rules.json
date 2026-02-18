@@ -1,11 +1,14 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "description": "NestJS skill triggers - consolidated structure",
   "skills": {
     "backend-dev-guidelines": {
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
+      "magicKeyword": "backend:",
+      "category": "backend",
+      "description": "NestJS architecture patterns and guidelines",
       "file": "../agents/backend-developer.md",
       "promptTriggers": {
         "keywords": ["backend", "nestjs", "api", "service", "controller", "entity", "dto", "module", "guard", "interceptor", "pipe", "decorator", "repository", "typeorm"],
@@ -20,6 +23,9 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "medium",
+      "magicKeyword": "debug:",
+      "category": "backend",
+      "description": "Debug NestJS backend errors systematically",
       "file": "debugging/fix-bug.md",
       "promptTriggers": {
         "keywords": ["backend bug", "backend debug", "nestjs error", "typescript error", "500 error", "400 error", "typeorm error", "injection error", "troubleshoot backend", "api error", "service error", "controller error"],
@@ -34,6 +40,8 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "medium",
+      "category": "backend",
+      "description": "Organize DTOs, entities, and TypeORM types",
       "file": "code-quality/organize-types.md",
       "promptTriggers": {
         "keywords": ["organize backend types", "dto types", "entity types", "typeorm types", "backend type organization", "refactor backend types", "nestjs types", "type structure backend"],
@@ -55,6 +63,9 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
+      "magicKeyword": "e2e:",
+      "category": "testing",
+      "description": "Generate backend e2e tests with Jest + Supertest",
       "file": "e2e-testing/SKILL.md",
       "promptTriggers": {
         "keywords": [
@@ -101,6 +112,9 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
+      "magicKeyword": "api:",
+      "category": "backend",
+      "description": "Build NestJS endpoints (controller -> service -> entity)",
       "file": "api-development/SKILL.md",
       "promptTriggers": {
         "keywords": [
@@ -131,6 +145,9 @@
       "type": "domain",
       "enforcement": "suggest",
       "priority": "high",
+      "magicKeyword": "seed:",
+      "category": "backend",
+      "description": "Create database seeders and test data",
       "file": "database-seeding/SKILL.md",
       "promptTriggers": {
         "keywords": [
