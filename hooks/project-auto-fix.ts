@@ -71,8 +71,8 @@ const DEFAULT_CONFIG: AutoFixConfig = {
       patterns: ['**/*.ts', '**/*.tsx'],
     },
     {
-      name: 'admin-dashboard',
-      path: 'frontend-admin-dashboard',
+      name: 'dashboard',
+      path: 'dashboard',
       lintCommand: 'npm run lint',
       typeCheckCommand: 'npm run type-check',
       patterns: ['**/*.ts', '**/*.tsx'],
