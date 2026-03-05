@@ -141,6 +141,25 @@
         ]
       }
     },
+    "enum-sync": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "medium",
+      "description": "Bidirectional enum sync across all stacks (backend ↔ frontend)",
+      "file": "../../base/commands/dev/sync-enums.md",
+      "promptTriggers": {
+        "keywords": ["sync enums", "enum sync", "backend enums", "frontend enums", "shared enums", "enum pipeline", "bidirectional enum"],
+        "intentPatterns": [
+          "(sync|copy|mirror|share).*?enum",
+          "enum.*?(sync|copy|mirror|frontend|backend)",
+          "(add|create|update).*?enum.*?(backend|shared)",
+          "enum.*?pipeline"
+        ]
+      },
+      "fileTriggers": {
+        "pathPatterns": ["**/shared/enums/**/*.ts", "**/enums/**/*.enum.ts"]
+      }
+    },
     "database-seeding": {
       "type": "domain",
       "enforcement": "suggest",
