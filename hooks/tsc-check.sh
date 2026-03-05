@@ -15,19 +15,28 @@ mkdir -p "$CACHE_DIR"
 TOOL_NAME=$(echo "$HOOK_INPUT" | jq -r '.tool_name // ""')
 TOOL_INPUT=$(echo "$HOOK_INPUT" | jq -r '.tool_input // {}')
 
-# Function to get repo for a file
+# Function to get repo for a file (auto-detects TypeScript directories)
 get_repo_for_file() {
     local file_path="$1"
     local relative_path="${file_path#$CLAUDE_PROJECT_DIR/}"
-    
+
     if [[ "$relative_path" =~ ^([^/]+)/ ]]; then
         local repo="${BASH_REMATCH[1]}"
+        local repo_path="$CLAUDE_PROJECT_DIR/$repo"
+
+        # Skip hidden directories and common non-project dirs
         case "$repo" in
-            email|exports|form|frontend|frontend-coach-dashboard|projects|uploads|users|utilities|events|database)
-                echo "$repo"
-                return 0
+            .*|node_modules|dist|build|coverage|tmp|temp|logs|nginx)
+                echo ""
+                return 1
                 ;;
         esac
+
+        # Auto-detect: accept any directory that has a tsconfig or package.json
+        if [ -f "$repo_path/tsconfig.json" ] || [ -f "$repo_path/tsconfig.app.json" ] || [ -f "$repo_path/tsconfig.build.json" ] || [ -f "$repo_path/package.json" ]; then
+            echo "$repo"
+            return 0
+        fi
     fi
     echo ""
     return 1
