@@ -42,6 +42,27 @@ throw new UnauthorizedException('Invalid credentials');
 | `'Success'` | `'Project created successfully.'` |
 | `'Not found'` | `'Project with ID ${id} not found!'` |
 
+### Rule 1b: Multi-Language i18n (MANDATORY)
+
+All messages use `nestjs-i18n` for multi-language support. The `I18nHelper.t()` static utility auto-resolves the user's language from `Accept-Language` header or `?lang=` query parameter.
+
+**When adding new messages:**
+1. Add the key to `backend/src/i18n/en/translation.json` (English)
+2. Add the key to `backend/src/i18n/ko/translation.json` (Korean)
+3. Use via `I18nHelper.t('domain.key', { param: value })`
+
+```typescript
+// ✅ CORRECT: Use I18nHelper.t() — auto-resolves language
+throw new NotFoundException(I18nHelper.t('projects.notFound', { id }));
+return new SuccessResponseDto(data, I18nHelper.t('projects.created'));
+```
+
+```typescript
+// ❌ WRONG: Hardcoded strings bypass multi-language support
+throw new NotFoundException(`Project with ID ${id} not found!`);
+return new SuccessResponseDto(data, 'Project created successfully.');
+```
+
 ### Rule 2: Check Existing APIs Before Creating New Ones
 
 **Before creating any new API endpoint, you MUST search for existing endpoints.**

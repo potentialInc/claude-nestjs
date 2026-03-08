@@ -322,7 +322,7 @@ export class FeatureService extends BaseService<FeatureEntity> {
 
 **Compliance Checkpoint:**
 - ✓ Service extends `BaseService<Entity, Repository>`?
-- ✓ ALL messages use `I18nHelper.t('domain.key')` (static utility, no injection)?
+- ✓ ALL messages use `I18nHelper.t('domain.key')` (static utility, no injection, multi-language via nestjs-i18n)?
 - ✓ ALL success messages end with a period "."?
 - ✓ ALL error messages end with an exclamation mark "!"?
 - ✓ NO vague messages like "Access denied" or "Not found"?
@@ -331,7 +331,7 @@ export class FeatureService extends BaseService<FeatureEntity> {
 - ✓ NO try/catch blocks?
 - ✓ NO direct TypeORM usage (uses repository instead)?
 
-**CRITICAL: All messages must go through `I18nHelper.t()`. Success messages end with "." and error messages end with "!". Messages must be meaningful and specific.**
+**CRITICAL: All messages must go through `I18nHelper.t()`. Success messages end with "." and error messages end with "!". Messages must be meaningful and specific. New messages must be added to BOTH `backend/src/i18n/en/translation.json` AND `backend/src/i18n/ko/translation.json`.**
 
 #### Layer 3: Repository
 - Location: `backend/src/modules/{feature}/{feature}.repository.ts`
@@ -778,6 +778,8 @@ npm run test:e2e -- --grep "Feature"
 
 - `backend/src/core/base/base.entity.ts` - UUID, timestamps, soft delete
 - `backend/src/core/base/base.service.ts` - CRUD operations, I18nHelper support
+- `backend/src/i18n/en/translation.json` - English messages (add new keys here)
+- `backend/src/i18n/ko/translation.json` - Korean messages (add new keys here)
 - `backend/src/core/base/base.repository.ts` - Database queries, TypeORM wrapper
 - `backend/src/core/base/base.controller.ts` - REST endpoints, auto-CRUD
 
