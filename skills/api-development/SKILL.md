@@ -141,7 +141,8 @@ export class FeatureService extends BaseService<Feature> {
 **Key Points:**
 - Extends `BaseService<Entity>` (provides findByIdOrFail, findAll, create, update, remove)
 - Pass repository AND entity name to `super(repository, 'EntityName')`
-- Use `I18nHelper.t('domain.key')` for centralized messages (static utility, no injection needed)
+- Use `I18nHelper.t('domain.key')` for centralized messages (static utility, no injection needed, auto-resolves language from request)
+- When adding new messages, update BOTH `backend/src/i18n/en/translation.json` and `backend/src/i18n/ko/translation.json`
 - Use HTTP exceptions: `ConflictException`, `NotFoundException`, `ForbiddenException`, `BadRequestException`
 - Implement business logic and validation before delegating to repository
 
