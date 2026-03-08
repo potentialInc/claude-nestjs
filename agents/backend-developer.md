@@ -72,7 +72,7 @@ All guides are located in: `.claude/nestjs/guides/`
 Before proceeding to Phase 0, confirm you understand these MANDATORY rules:
 
 - [ ] **I have read `best-practices.md`** (MANDATORY for ALL tasks)
-- [ ] **I will use I18nHelper for ALL messages** (NO hardcoded strings in throw statements)
+- [ ] **I will follow the message punctuation convention** (success messages end with ".", error messages end with "!")
 - [ ] **I will check existing APIs first** using grep before creating new endpoints
 - [ ] **I will extend base classes** (BaseController, BaseService, BaseRepository, BaseEntity)
 - [ ] **I will NOT put business logic in controllers** (only routing and service delegation)
@@ -87,15 +87,18 @@ Before proceeding to Phase 0, confirm you understand these MANDATORY rules:
 
 **From best-practices.md:**
 
-1. **I18nHelper Usage (MANDATORY):**
+1. **Message Punctuation Convention (MANDATORY):**
    ```typescript
-   // ✅ CORRECT
-   throw new NotFoundException(
-     this.i18nHelper.t('translation.module.error.not_found')
-   );
+   // ✅ CORRECT - Success messages end with "."
+   return new SuccessResponseDto(data, 'Project created successfully.');
 
-   // ❌ WRONG - NEVER hardcode
+   // ✅ CORRECT - Error messages end with "!"
+   throw new NotFoundException(`Project with ID ${id} not found!`);
+   ```
+   ```typescript
+   // ❌ WRONG - Missing punctuation or too vague
    throw new NotFoundException('Not found');
+   return new SuccessResponseDto(data, 'Success');
    ```
 
 2. **Check Existing APIs (MANDATORY):**
@@ -297,6 +300,7 @@ export class FeatureController extends BaseController<FeatureEntity> {
 ```typescript
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { BaseService } from '@/core/base/base.service';
+import { I18nHelper } from '@core/utils';
 
 @Injectable()
 export class FeatureService extends BaseService<FeatureEntity> {
@@ -309,7 +313,7 @@ export class FeatureService extends BaseService<FeatureEntity> {
   async createWithUser(dto: CreateFeatureDto, user: User): Promise<FeatureEntity> {
     const existing = await this.featureRepository.findByName(dto.name);
     if (existing) {
-      throw new ConflictException('Feature with this name already exists');
+      throw new ConflictException(I18nHelper.t('features.alreadyExists'));
     }
     return this.featureRepository.create({ ...dto, userId: user.id });
   }
@@ -318,23 +322,16 @@ export class FeatureService extends BaseService<FeatureEntity> {
 
 **Compliance Checkpoint:**
 - ✓ Service extends `BaseService<Entity, Repository>`?
-- ✓ `I18nHelper` injected in constructor?
-- ✓ ALL messages use `this.i18nHelper.t('translation.module.type.key')`?
-- ✓ NO hardcoded strings in throw statements?
+- ✓ ALL messages use `I18nHelper.t('domain.key')` (static utility, no injection)?
+- ✓ ALL success messages end with a period "."?
+- ✓ ALL error messages end with an exclamation mark "!"?
+- ✓ NO vague messages like "Access denied" or "Not found"?
+- ✓ NO hardcoded message strings?
 - ✓ Throws HTTP exceptions (NotFoundException, ConflictException, etc.)?
 - ✓ NO try/catch blocks?
 - ✓ NO direct TypeORM usage (uses repository instead)?
 
-**CRITICAL: The example above shows hardcoded error messages. In real implementation, you MUST use I18nHelper:**
-```typescript
-// ✅ CORRECT
-throw new ConflictException(
-  this.i18nHelper.t('translation.feature.error.already_exists')
-);
-
-// ❌ WRONG (shown above for illustration only)
-throw new ConflictException('Feature with this name already exists');
-```
+**CRITICAL: All messages must go through `I18nHelper.t()`. Success messages end with "." and error messages end with "!". Messages must be meaningful and specific.**
 
 #### Layer 3: Repository
 - Location: `backend/src/modules/{feature}/{feature}.repository.ts`
@@ -710,9 +707,9 @@ npm run test:e2e -- --grep "Feature"
    ```bash
    cd backend
 
-   # 1. Check for hardcoded strings in throw statements
-   rg "throw new.*Exception\(['\"]" src/modules/ --glob '!*.spec.ts'
-   # ✅ Should return EMPTY (all should use I18nHelper)
+   # 1. Check message punctuation convention
+   rg -n "throw new|message:" backend/src --glob '*.ts' | grep -v '[.!][\x27\x60]'
+   # ✅ Should return EMPTY (all messages should end with "." or "!")
 
    # 2. Check for try/catch in controllers
    rg "try \{" src/modules/*/controllers/ --glob '*.controller.ts'
@@ -744,7 +741,7 @@ npm run test:e2e -- --grep "Feature"
 ### Mandatory Reading (Read for EVERY Task)
 
 **`.claude/nestjs/guides/best-practices.md`**
-- **MANDATORY rules**: I18nHelper for ALL messages, check existing APIs, base classes
+- **MANDATORY rules**: message punctuation convention (success=".", error="!"), check existing APIs, base classes
 - Critical patterns that must NEVER be violated
 - No business logic in controllers, no try/catch in controllers
 - NO localStorage for tokens, NO process.env direct access
@@ -854,44 +851,26 @@ After completing each phase, provide:
 
 **These rules are MANDATORY. Violations will cause implementation failure.**
 
-#### 1. I18nHelper for ALL Messages (MANDATORY)
+#### 1. Message Punctuation Convention (MANDATORY)
 
-**NEVER hardcode error messages, success messages, or any user-facing text.**
+All user-facing messages must follow these rules:
 
 ```typescript
-// ✅ CORRECT - Use I18nHelper
-import { I18nHelper } from '@core/utils';
+// ✅ CORRECT - Success messages end with "."
+return new SuccessResponseDto(data, 'Project created successfully.');
+return new ResponsePayloadDto({ message: 'Login successful.' });
 
-@Injectable()
-export class MyService extends BaseService<MyEntity> {
-  constructor(
-    private readonly repository: MyRepository,
-    private readonly i18nHelper: I18nHelper, // Always inject I18nHelper
-  ) {
-    super(repository, 'MyEntity');
-  }
-
-  async findById(id: string): Promise<MyEntity> {
-    const entity = await this.repository.findById(id);
-    if (!entity) {
-      throw new NotFoundException(
-        this.i18nHelper.t('translation.my_module.error.not_found'),
-      );
-    }
-    return entity;
-  }
-}
-
-// ❌ WRONG - Hardcoded error messages - NEVER DO THIS
-throw new NotFoundException('Entity not found');
-throw new BadRequestException('Invalid input');
-throw new ConflictException('Already exists');
+// ✅ CORRECT - Error messages end with "!"
+throw new NotFoundException(`Project with ID ${id} not found!`);
+throw new ForbiddenException('You do not have permission to access this resource!');
 ```
 
-**Translation key structure**: `translation.<module>.<type>.<key>`
-- Modules: `user_management`, `authentication`, `feature`, etc.
-- Types: `success`, `error`, `info`
-- Keys: `not_found`, `created_successfully`, etc.
+```typescript
+// ❌ WRONG - Missing punctuation or vague messages
+throw new NotFoundException('Not found');
+throw new ForbiddenException('Access denied');
+return new SuccessResponseDto(data, 'Success');
+```
 
 #### 2. Check Existing APIs First (MANDATORY)
 
