@@ -2,49 +2,45 @@
 
 ## CRITICAL RULES (MANDATORY)
 
-### Rule 1: Always Use I18nHelper for All Messages
+### Rule 1: Message Punctuation Convention (MANDATORY)
 
-**NEVER hardcode strings in error messages, success messages, or any user-facing text.**
+All user-facing messages in the backend MUST follow these punctuation rules:
 
+**Success messages** must be meaningful and end with a period `.`:
 ```typescript
-// ✅ CORRECT: Use I18nHelper for ALL messages
-import { I18nHelper } from '@core/utils';
-
-@Injectable()
-export class MyService extends BaseService<MyEntity> {
-    constructor(
-        private readonly repository: MyRepository,
-        private readonly i18nHelper: I18nHelper, // Always inject I18nHelper
-    ) {
-        super(repository, 'MyEntity');
-    }
-
-    async findById(id: string): Promise<MyEntity> {
-        const entity = await this.repository.findById(id);
-        if (!entity) {
-            throw new NotFoundException(
-                this.i18nHelper.t('translation.my_module.error.not_found'),
-            );
-        }
-        return entity;
-    }
-}
-
-// ❌ WRONG: Hardcoded error messages - NEVER DO THIS
-throw new NotFoundException('Entity not found');
-throw new BadRequestException('Invalid input');
-throw new ConflictException('Already exists');
+// ✅ CORRECT: Success messages end with "."
+return new SuccessResponseDto(data, 'Project created successfully.');
+return new ResponsePayloadDto({ message: 'Login successful.' });
 ```
 
-**Translation key structure**: `translation.<module>.<type>.<key>`
-- `<module>`: `user_management`, `authentication`, `match`, `wallet`, etc.
-- `<type>`: `success`, `error`, `info`
-- `<key>`: `not_found`, `created_successfully`, etc.
+```typescript
+// ❌ WRONG: Missing period, or too vague
+return new SuccessResponseDto(data, 'Success');
+return new SuccessResponseDto(data, 'Project created successfully');
+```
 
-**When adding new messages**:
-1. Check if key exists in `backend/src/i18n/en/translation.json`
-2. Add to BOTH `en/translation.json` and `ko/translation.json`
-3. Include `I18nHelper` in module providers
+**Error messages** must be meaningful and end with an exclamation mark `!`:
+```typescript
+// ✅ CORRECT: Error messages end with "!" and are descriptive
+throw new NotFoundException(`Project with ID ${id} not found!`);
+throw new ForbiddenException('You do not have permission to access this resource!');
+throw new UnauthorizedException('The access ID or password you entered is incorrect!');
+```
+
+```typescript
+// ❌ WRONG: Missing "!", or too vague
+throw new NotFoundException('Not found');
+throw new ForbiddenException('Access denied');
+throw new UnauthorizedException('Invalid credentials');
+```
+
+**Avoid vague messages** — be specific about what went wrong or succeeded:
+| ❌ Vague | ✅ Meaningful |
+|----------|--------------|
+| `'Access denied'` | `'You do not have permission to access this resource!'` |
+| `'Invalid token'` | `'The authentication token is invalid or malformed!'` |
+| `'Success'` | `'Project created successfully.'` |
+| `'Not found'` | `'Project with ID ${id} not found!'` |
 
 ### Rule 2: Check Existing APIs Before Creating New Ones
 

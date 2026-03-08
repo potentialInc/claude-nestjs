@@ -140,13 +140,13 @@ export class Product extends BaseEntity {
     @Column('simple-array')
     tags: string[];
 
-    // Enum
+    // Enum (MUST use shared enum from src/shared/enums/, NEVER use varchar for enum columns)
     @Column({
         type: 'enum',
-        enum: ['pending', 'active', 'archived'],
-        default: 'pending',
+        enum: StatusEnum,
+        default: StatusEnum.PENDING,
     })
-    status: 'pending' | 'active' | 'archived';
+    status: StatusEnum;
 }
 ```
 

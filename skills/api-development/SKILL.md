@@ -107,13 +107,12 @@ import { BaseService } from '@/core/base/base.service';
 import { FeatureRepository } from './feature.repository';
 import { Feature } from './feature.entity';
 import { CreateFeatureDto } from './dtos/create-feature.dto';
-import { I18nHelper } from '@/core/utils/i18n.helper';
+import { I18nHelper } from '@core/utils';
 
 @Injectable()
 export class FeatureService extends BaseService<Feature> {
   constructor(
     private readonly featureRepository: FeatureRepository,
-    private readonly i18nHelper: I18nHelper,
   ) {
     super(featureRepository, 'Feature');
   }
@@ -126,7 +125,7 @@ export class FeatureService extends BaseService<Feature> {
 
     if (existing) {
       throw new ConflictException(
-        this.i18nHelper.t('errors.feature.alreadyExists'),
+        I18nHelper.t('features.alreadyExists'),
       );
     }
 
@@ -142,7 +141,7 @@ export class FeatureService extends BaseService<Feature> {
 **Key Points:**
 - Extends `BaseService<Entity>` (provides findByIdOrFail, findAll, create, update, remove)
 - Pass repository AND entity name to `super(repository, 'EntityName')`
-- Inject `I18nHelper` for internationalized error messages
+- Use `I18nHelper.t('domain.key')` for centralized messages (static utility, no injection needed)
 - Use HTTP exceptions: `ConflictException`, `NotFoundException`, `ForbiddenException`, `BadRequestException`
 - Implement business logic and validation before delegating to repository
 
