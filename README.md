@@ -32,7 +32,7 @@ skills/
 
 ### Docs
 - **BEST_PRACTICES.md** - NestJS coding standards, error handling, database patterns
-- **guides/best-practices.md** - Includes CRITICAL RULES: I18nHelper usage, check existing APIs first
+- **guides/best-practices.md** - Includes CRITICAL RULES: I18nHelper usage (nestjs-i18n multi-language), check existing APIs first
 
 ## Usage
 
