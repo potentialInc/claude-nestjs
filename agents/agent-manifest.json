@@ -49,6 +49,14 @@
       "domain": "backend",
       "roles": ["implementer"],
       "description": "Manage caching strategies"
+    },
+    "compliance-checker": {
+      "file": "compliance-checker.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "qa",
+      "roles": ["auditor", "tester"],
+      "description": "Audits NestJS backend for mandatory rule violations (base classes, I18nHelper, controllers, auth, config, enum sync)"
     }
   }
 }
