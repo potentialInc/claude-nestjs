@@ -160,6 +160,37 @@
         "pathPatterns": ["**/shared/enums/**/*.ts", "**/enums/**/*.enum.ts"]
       }
     },
+    "compliance-check": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "magicKeyword": "compliance:",
+      "category": "backend",
+      "description": "Audit NestJS backend against 35 mandatory architecture rules and auto-fix violations",
+      "file": "compliance-check.md",
+      "agentFile": "../agents/compliance-checker.md",
+      "ralphWorkflow": "rule-check-backend",
+      "promptTriggers": {
+        "keywords": [
+          "compliance check",
+          "rule check",
+          "architecture check",
+          "compliance audit",
+          "check rules",
+          "backend compliance",
+          "code compliance",
+          "rule violations",
+          "architecture audit",
+          "35 rules"
+        ],
+        "intentPatterns": [
+          "(run|check|audit|verify).*?(compliance|rules|architecture)",
+          "(compliance|rule).*?(check|audit|scan|verify)",
+          "(backend|nestjs).*?(compliance|rules|architecture).*?(check|audit)",
+          "(check|verify|scan).*?(violations|architecture|patterns)"
+        ]
+      }
+    },
     "database-seeding": {
       "type": "domain",
       "enforcement": "suggest",

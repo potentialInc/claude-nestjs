@@ -80,6 +80,17 @@ Before proceeding to Phase 0, confirm you understand these MANDATORY rules:
 - [ ] **I will NOT use localStorage for JWT tokens** (use HTTP-only cookies instead)
 - [ ] **I will NOT access process.env directly** (use UnifiedConfig instead)
 - [ ] **I will check for existing endpoints** before creating new ones
+- [ ] **I will NOT use `synchronize: true`** in TypeORM config (use migrations instead)
+- [ ] **I will NOT hardcode passwords/credentials** in source code (use env vars or _fixtures.yaml)
+- [ ] **I will NOT throw plain `Error()`** (use NestJS HttpException subclasses)
+- [ ] **I will ensure global exception filter is registered** in main.ts
+- [ ] **I will add class-validator decorators** to ALL DTO properties
+- [ ] **I will use response DTOs** — never return raw entities from controllers
+- [ ] **I will keep all enums in `shared/enums/`** — never inside module directories
+- [ ] **I will keep shared decorators in `shared/decorators/`** — not trapped in auth module
+- [ ] **I will NOT use `any` type** — use proper types, generics, or `unknown` with type guards
+- [ ] **I will validate file uploads** with ParseFilePipe when using FileInterceptor
+- [ ] **I will add env validation schema** to ConfigModule.forRoot()
 
 **If you cannot check all boxes above, STOP and read the guides now.**
 
@@ -1099,3 +1110,58 @@ echo '{"session_id":"manual"}' | node .claude/nestjs/hooks/backend-cleanup.ts
 ```
 
 ---
+
+## Architecture Rules (35 Rules — Compliance Gate)
+
+These rules are enforced by the compliance-checker agent. All CRITICAL and HIGH violations must be resolved before the backend phase can pass.
+
+### CRITICAL (blocks compliance gate)
+- **R1**: All entities/services/controllers/repositories extend base classes (exceptions for aggregation modules)
+- **R6**: Auth tokens use HTTP-only cookies — never localStorage
+- **R11**: Global exception filter must exist and be registered in main.ts
+- **R15**: `synchronize: false` in TypeORM config — use migrations
+- **R21**: No plaintext passwords or hardcoded credentials in source code
+- **R34**: All thrown errors use NestJS HttpException subclasses — never `throw new Error()`
+
+### HIGH (blocks compliance gate)
+- **R2**: Exception messages use I18nHelper.t() — no hardcoded strings
+- **R3**: No try/catch in controllers — let exception filter handle errors
+- **R4**: No business logic in controllers — delegate to services
+- **R5**: Services use repository methods — no direct TypeORM
+- **R10**: Enum values from shared/enums — no hardcoded string comparisons
+- **R12**: Response transform interceptor registered globally
+- **R13**: Shared response DTOs (SuccessResponseDto, PaginatedResponseDto) exist
+- **R16**: BaseEntity provides id, createdAt, updatedAt, deletedAt
+- **R18**: Environment validation schema in ConfigModule.forRoot()
+- **R20**: All enums in shared/enums — never inside module directories
+- **R22**: Shared decorators (@CurrentUser, @Public, @Roles) in shared/decorators — not in auth module
+- **R24**: Controllers return response DTOs — never raw entities
+- **R25**: Seed scripts use TypeORM methods — no raw SQL
+- **R29**: Database config includes connection pooling and timeout
+- **R30**: No `any` type — use proper types or `unknown` with type guards
+- **R32**: All DTO properties have class-validator decorators
+- **R33**: File uploads validated with ParseFilePipe (size + type)
+- **R35**: Seed scripts are idempotent, read _fixtures.yaml, bcrypt hash passwords
+
+### MEDIUM (documented, doesn't block)
+- **R7**: No direct process.env access — use UnifiedConfig/ConfigService
+- **R8**: Message punctuation convention (success ".", error "!")
+- **R9**: Swagger documentation on all controllers and endpoints
+- **R14**: Shared interfaces (IBaseService, IBaseRepository) exist
+- **R17**: Logging interceptor exists
+- **R19**: File upload pipes with validators
+- **R23**: Aggregation modules follow correct pattern
+- **R26**: Health check verifies database connectivity
+- **R27**: Cookie configuration in shared helper (not inline)
+- **R28**: Configuration split by domain (not monolithic)
+- **R31**: Constants directory exists (shared/constants or core/constants)
+
+### Agent Coordination
+
+| Agent | When to Use | Purpose |
+|-------|------------|---------|
+| **compliance-checker** | After Phase 5 or Phase 7 | Run `rule-check-backend` to verify 35 mandatory rules |
+| **code-architecture-reviewer** | After major refactors | Review architectural consistency |
+| **auth-route-debugger** | When auth issues occur | Debug authentication and route problems |
+
+**Failure to follow these rules creates architecture violations caught by the compliance-checker.**
