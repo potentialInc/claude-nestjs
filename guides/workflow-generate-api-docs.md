@@ -13,7 +13,7 @@ Generate API documentation for all modules and save to .claude-project/docs/PROJ
 ### Generate Module-Specific Documentation
 
 ```
-Generate API documentation for the exercises module
+Generate API documentation for the items module
 ```
 
 ### Update After Changes
@@ -47,7 +47,7 @@ Extract:
 - `@ApiOperation({ summary })` - Endpoint description
 - `@ApiResponse({ status, description })` - Response codes
 - `@Public()` - Public endpoints (no auth required)
-- `@Roles('role')`, `@AdminOnly()`, `@CoachOnly()`, `@PatientOnly()` - Access control
+- `@Roles('role')`, `@AdminOnly()` - Access control (add project-specific role decorators as needed)
 
 ### 2. Custom @ApiSwagger Decorator
 
@@ -123,7 +123,7 @@ All responses are wrapped in `ResponsePayloadDto`:
 ```markdown
 # Project API Reference
 
-> Auto-generated API documentation for ActivityCoaching Backend
+> Auto-generated API documentation for the Backend
 
 ## Base URL
 
@@ -146,12 +146,10 @@ Public endpoints are marked with **Public**.
 | ----------------------- | ---------------------------------- |
 | [Auth](#auth)           | Authentication and authorization   |
 | [Users](#users)         | User management                    |
-| [Exercises](#exercises) | Exercise catalog and prescriptions |
-| [Chat](#chat)           | Real-time messaging                |
-| [Meetings](#meetings)   | Zoom meeting integration           |
-| [Surveys](#surveys)     | Daily surveys                      |
-| [Features](#features)   | Feature flags                      |
-| [OTP](#otp)             | One-time passwords                 |
+| [Items](#items)         | Core resource CRUD                 |
+| [Categories](#categories) | Category management              |
+| [Notifications](#notifications) | Notification system        |
+| ...                     | (add project-specific modules)     |
 
 ---
 
@@ -185,7 +183,7 @@ Authenticate user and receive JWT tokens.
 ```markdown
 ### {METHOD} {Path}
 
-{Access: Public | Requires Auth | Admin Only | Coach Only | Patient Only}
+{Access: Public | Requires Auth | Admin Only | Role-specific}
 
 {Summary/Description}
 
@@ -225,12 +223,9 @@ Scan these directories for controllers:
 ```
 src/modules/auth/auth.controller.ts
 src/modules/users/user.controller.ts
-src/modules/exercises/controllers/*.controller.ts
-src/modules/chat/controllers/chat.controller.ts
-src/modules/meetings/controllers/zoom-meeting.controller.ts
-src/modules/surveys/controllers/daily-survey.controller.ts
-src/modules/features/feature.controller.ts
-src/modules/otp/otp.controller.ts
+src/modules/{feature}/controllers/*.controller.ts
+# Discover all controllers:
+# find src/modules -name '*.controller.ts' | sort
 ```
 
 ---
@@ -265,29 +260,29 @@ src/modules/otp/otp.controller.ts
 ## Example: Reading a Controller
 
 ```typescript
-// src/modules/exercises/controllers/exercise.controller.ts
+// src/modules/items/controllers/item.controller.ts
 
-@ApiTags('Exercises')
-@Controller('exercises')
+@ApiTags('Items')
+@Controller('items')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
-export class ExerciseController extends BaseController<...> {
+export class ItemController extends BaseController<...> {
 
     @ApiSwagger({
-        resourceName: 'Exercise',
+        resourceName: 'Item',
         operation: 'create',
-        requestDto: CreateExerciseDto,
-        responseDto: ExerciseResponseDto,
+        requestDto: CreateItemDto,
+        responseDto: ItemResponseDto,
         successStatus: 201,
     })
     @AdminOnly()
     @Post()
-    async create(@Body() dto: CreateExerciseDto) { ... }
+    async create(@Body() dto: CreateItemDto) { ... }
 
     @ApiSwagger({
-        resourceName: 'Exercise',
+        resourceName: 'Item',
         operation: 'getAll',
-        responseDto: ExerciseResponseDto,
+        responseDto: ItemResponseDto,
         isArray: true,
     })
     @Get()
@@ -298,40 +293,40 @@ export class ExerciseController extends BaseController<...> {
 **Generates:**
 
 ```markdown
-## Exercises
+## Items
 
-### POST /exercises
+### POST /items
 
 **Admin Only**
 
-Create a new exercise.
+Create a new item.
 
 **Request Body**
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| title | string | Yes | Exercise title |
-| videoUrl | string | Yes | Video demonstration URL |
-| category | ExerciseCategoryEnum | No | Exercise category |
+| title | string | Yes | Item title |
+| imageUrl | string | Yes | Image URL |
+| category | CategoryEnum | No | Item category |
 
 **Responses**
 | Status | Description |
 |--------|-------------|
-| 201 | Exercise created successfully |
+| 201 | Item created successfully |
 | 400 | Invalid input data |
 | 401 | Unauthorized |
 
 ---
 
-### GET /exercises
+### GET /items
 
 **Requires Auth**
 
-Get all exercises.
+Get all items.
 
 **Responses**
 | Status | Description |
 |--------|-------------|
-| 200 | Exercises retrieved successfully |
+| 200 | Items retrieved successfully |
 | 401 | Unauthorized |
 ```
 

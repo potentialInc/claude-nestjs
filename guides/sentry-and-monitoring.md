@@ -344,6 +344,6 @@ async function good() {
 
 **Related Files:**
 
-- [SKILL.md](SKILL.md)
+- [API Development Skill](../skills/api-development/SKILL.md)
 - [routing-and-controllers.md](routing-and-controllers.md)
 - [async-and-errors.md](async-and-errors.md)

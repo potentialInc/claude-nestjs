@@ -688,6 +688,45 @@ export class ProductModule {}
 
 ---
 
+---
+
+## MANDATORY: Cross-Cutting Rules
+
+### I18nHelper for ALL Exception Messages
+
+No hardcoded strings in `throw` statements. All messages via `I18nHelper`:
+
+```typescript
+// BAD
+throw new NotFoundException('User not found');
+
+// GOOD
+throw new NotFoundException(I18nHelper.t('user.notFound'));
+```
+
+Messages MUST be added to BOTH locale files:
+- `backend/src/i18n/en/translation.json`
+- `backend/src/i18n/ko/translation.json`
+
+### Layer Size Constraints
+
+| Layer | Max Lines | Refactor Strategy |
+|-------|-----------|-------------------|
+| Controller | 200 | Split into feature sub-controllers |
+| Service | 300 | Extract domain helper services |
+| Repository | 200 | Extract query builder methods |
+| Entity | 150 | Extract embedded/value objects |
+
+### No Direct `process.env`
+
+Use `UnifiedConfig` for all environment variable access. See [best-practices.md](best-practices.md#unifiedconfig--no-direct-processenv).
+
+### Swagger on EVERY Controller Method
+
+Every public endpoint MUST have `@ApiOperation`, `@ApiResponse`, and `@ApiTags` decorators. No exceptions.
+
+---
+
 **Related Files:**
 
 - [SKILL.md](../SKILL.md) - Main guide

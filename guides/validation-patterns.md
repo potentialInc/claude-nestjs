@@ -798,6 +798,33 @@ When validation fails, NestJS automatically returns:
 
 ---
 
+---
+
+## MANDATORY: I18nHelper for Validation Messages
+
+Custom validation messages MUST use I18nHelper, not hardcoded strings:
+
+```typescript
+// BAD
+@IsEmail({}, { message: 'Invalid email format' })
+
+// GOOD
+@IsEmail({}, { message: I18nHelper.t('validation.invalidEmail') })
+```
+
+For standard class-validator decorators, the default messages are acceptable. But any custom `message` property MUST go through I18nHelper.
+
+## MANDATORY: DTO Naming & Organization
+
+- Create DTOs in `src/modules/[module]/dto/`
+- Naming: `Create[Entity]Dto`, `Update[Entity]Dto`, `[Entity]ResponseDto`, `[Entity]QueryDto`
+- Use `PartialType(CreateXxxDto)` for update DTOs (not duplicating fields)
+- Use `PickType` / `OmitType` for derived DTOs
+- Swagger `@ApiProperty()` on EVERY field — no exceptions
+- `@ApiPropertyOptional()` for optional fields
+
+---
+
 **Related Files:**
 
 - [SKILL.md](../SKILL.md) - Main guide

@@ -180,3 +180,20 @@ fd "seed" backend/src/database/ --glob '*.ts' | xargs rg -L "bcrypt|hash" 2>/dev
 - 0 High violations (Rules 2, 3, 4, 5, 10, 12, 13, 16, 18, 20, 22, 24, 25, 29, 30, 32, 33, 35)
 - Medium violations documented but don't block PASS (Rules 7, 8, 9, 14, 17, 19, 23, 26, 27, 28, 31)
 - All fixes verified with `npx tsc --noEmit`
+
+## Rule Foundations
+
+Rules are derived from these authoritative guides:
+
+| Rule Area | Guide Reference |
+|-----------|----------------|
+| Base classes | [architecture-overview.md](../guides/architecture-overview.md) |
+| I18nHelper | [best-practices.md](../guides/best-practices.md) |
+| UnifiedConfig | [best-practices.md](../guides/best-practices.md#unifiedconfig--no-direct-processenv) |
+| Validation/DTOs | [validation-patterns.md](../guides/validation-patterns.md) |
+| Controllers | [routing-and-controllers.md](../guides/routing-and-controllers.md) |
+| Services | [services-and-repositories.md](../guides/services-and-repositories.md) |
+| Auth/Guards | [authentication-cookies.md](../guides/authentication-cookies.md) |
+| Middleware | [middleware-guide.md](../guides/middleware-guide.md) |
+| Database | [database-patterns.md](../guides/database-patterns.md) |
+| Security | `.claude/base/docs/SECURITY_AND_OPTIMIZATION.md` |

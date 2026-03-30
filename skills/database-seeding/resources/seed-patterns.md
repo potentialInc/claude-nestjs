@@ -8,7 +8,7 @@ Comprehensive patterns for seeding different entity types in NestJS/TypeORM proj
 
 1. [User Seeding Patterns](#user-seeding-patterns)
 2. [Lookup Table Patterns](#lookup-table-patterns)
-3. [Transactional Data Patterns](#transactional-data-patterns)
+3. [Order Data Patterns](#order-data-patterns)
 4. [Hierarchical Data Patterns](#hierarchical-data-patterns)
 5. [Junction Table Patterns](#junction-table-patterns)
 6. [Soft Delete Considerations](#soft-delete-considerations)
@@ -35,14 +35,12 @@ const admin = repo.create({
 ```typescript
 // Use predictable credentials for E2E tests
 const testUser = repo.create({
-  email: 'testuser@pennywise.app',
-  password: await utilsService.getHash('TestPassword123!'),
+  email: 'user@example.com',
+  password: await utilsService.getHash('Password123!'),
   displayName: 'Test User',
   role: RolesEnum.USER,
   status: ActiveStatusEnum.ACTIVE,
   emailVerified: true,
-  currency: CurrencyEnum.USD,
-  monthlyIncome: 5000,
 });
 ```
 
@@ -50,9 +48,9 @@ const testUser = repo.create({
 
 ```typescript
 const TEST_USERS = [
-  { email: 'user1@test.app', name: 'User One', income: 3000 },
-  { email: 'user2@test.app', name: 'User Two', income: 5000 },
-  { email: 'user3@test.app', name: 'User Three', income: 8000 },
+  { email: 'user1@example.com', name: 'User One' },
+  { email: 'user2@example.com', name: 'User Two' },
+  { email: 'user3@example.com', name: 'User Three' },
 ];
 
 const users: User[] = [];
@@ -64,7 +62,7 @@ for (const userData of TEST_USERS) {
     role: RolesEnum.USER,
     status: ActiveStatusEnum.ACTIVE,
     emailVerified: true,
-    monthlyIncome: userData.income,
+    displayName: userData.name,
   });
   await repo.save(user);
   users.push(user);
@@ -79,9 +77,9 @@ for (const userData of TEST_USERS) {
 
 ```typescript
 const SYSTEM_CATEGORIES = [
-  { name: 'Food & Dining', icon: 'utensils', type: 'expense' },
-  { name: 'Transportation', icon: 'car', type: 'expense' },
-  { name: 'Salary', icon: 'wallet', type: 'income' },
+  { name: 'Electronics', icon: 'cpu', type: 'general' },
+  { name: 'Clothing', icon: 'shirt', type: 'general' },
+  { name: 'Featured', icon: 'star', type: 'featured' },
 ];
 
 for (const cat of SYSTEM_CATEGORIES) {
@@ -101,7 +99,7 @@ for (const cat of SYSTEM_CATEGORIES) {
 ```typescript
 const USER_CATEGORIES = [
   { name: 'Side Hustle', icon: 'briefcase' },
-  { name: 'Pet Expenses', icon: 'paw' },
+  { name: 'Accessories', icon: 'paw' },
 ];
 
 for (const cat of USER_CATEGORIES) {
@@ -118,7 +116,7 @@ for (const cat of USER_CATEGORIES) {
 
 ---
 
-## Transactional Data Patterns
+## Order Data Patterns
 
 ### Date Range Generation
 
@@ -140,89 +138,89 @@ function generateDateRange(days: number): Date[] {
 // Use in seeder
 const dates = generateDateRange(30);
 for (const date of dates) {
-  // Create transactions for each date
+  // Create orders for each date
 }
 ```
 
-### Varied Transaction Amounts
+### Varied Order Amounts
 
 ```typescript
 function randomAmount(min: number, max: number): number {
   return Math.round((Math.random() * (max - min) + min) * 100) / 100;
 }
 
-// Expense: $5-$150
-const expenseAmount = randomAmount(5, 150);
+// General: $5-$150
+const generalAmount = randomAmount(5, 150);
 
-// Income: fixed or ranged
-const salaryAmount = 2500;  // Fixed
+// Special: fixed or ranged
+const defaultAmount = 2500;  // Fixed
 const bonusAmount = randomAmount(500, 2000);  // Variable
 ```
 
-### Transaction with Description
+### Order with Description
 
 ```typescript
-const EXPENSE_DESCRIPTIONS = {
-  'Food & Dining': ['Grocery store', 'Restaurant', 'Coffee shop', 'Fast food'],
-  'Transportation': ['Gas station', 'Uber', 'Bus fare', 'Parking'],
-  'Shopping': ['Amazon', 'Target', 'Clothing store', 'Electronics'],
+const ITEM_DESCRIPTIONS = {
+  'Electronics': ['Smartphone', 'Laptop', 'Headphones', 'Tablet'],
+  'Clothing': ['T-shirt', 'Jeans', 'Sneakers', 'Jacket'],
+  'Books': ['Fiction', 'Technical', 'Biography', 'Self-help'],
 };
 
 function getRandomDescription(categoryName: string): string {
-  const descriptions = EXPENSE_DESCRIPTIONS[categoryName] || ['General expense'];
+  const descriptions = ITEM_DESCRIPTIONS[categoryName] || ['General item'];
   return descriptions[Math.floor(Math.random() * descriptions.length)];
 }
 ```
 
-### Complete Transaction Seeder
+### Complete Order Seeder
 
 ```typescript
-export async function seedTransactions(
+export async function seedOrders(
   dataSource: DataSource,
   user: User,
   categories: Category[],
 ): Promise<void> {
-  const repo = dataSource.getRepository(Transaction);
+  const repo = dataSource.getRepository(Order);
 
-  const expenseCategories = categories.filter(c =>
-    !['Salary', 'Investment', 'Other Income'].includes(c.name)
+  const generalCategories = categories.filter(c =>
+    !['Featured', 'Premium', 'Special'].includes(c.name)
   );
-  const incomeCategory = categories.find(c => c.name === 'Salary')!;
+  const mainCategory = categories.find(c => c.name === 'Featured')!;
 
-  const transactions: Partial<Transaction>[] = [];
+  const orders: Partial<Order>[] = [];
   const dates = generateDateRange(30);
 
   for (const date of dates) {
-    // 1-4 expenses per day
-    const expenseCount = Math.floor(Math.random() * 4) + 1;
-    for (let i = 0; i < expenseCount; i++) {
-      const category = expenseCategories[
-        Math.floor(Math.random() * expenseCategories.length)
+    // 1-4 generals per day
+    const generalCount = Math.floor(Math.random() * 4) + 1;
+    for (let i = 0; i < generalCount; i++) {
+      const category = generalCategories[
+        Math.floor(Math.random() * generalCategories.length)
       ];
-      transactions.push({
+      orders.push({
         userId: user.id,
         categoryId: category.id,
-        type: TransactionTypeEnum.EXPENSE,
+        type: OrderStatusEnum.PENDING,
         amount: randomAmount(10, 100),
         description: getRandomDescription(category.name),
         date: date,
       });
     }
 
-    // Salary on 1st and 15th
+    // Recurring on 1st and 15th
     if (date.getDate() === 1 || date.getDate() === 15) {
-      transactions.push({
+      orders.push({
         userId: user.id,
-        categoryId: incomeCategory.id,
-        type: TransactionTypeEnum.INCOME,
-        amount: user.monthlyIncome / 2,
-        description: 'Salary deposit',
+        categoryId: mainCategory.id,
+        type: OrderStatusEnum.CONFIRMED,
+        amount: defaultAmount,
+        description: 'Recurring order',
         date: date,
       });
     }
   }
 
-  await repo.save(transactions.map(t => repo.create(t)));
+  await repo.save(orders.map(t => repo.create(t)));
 }
 ```
 
@@ -230,59 +228,47 @@ export async function seedTransactions(
 
 ## Hierarchical Data Patterns
 
-### Goals with Contributions
+### Reviews with Comments
 
 ```typescript
-export async function seedGoals(
+export async function seedReviews(
   dataSource: DataSource,
   user: User,
 ): Promise<void> {
-  const goalRepo = dataSource.getRepository(Goal);
-  const contribRepo = dataSource.getRepository(GoalContribution);
+  const reviewRepo = dataSource.getRepository(Review);
+  const commentRepo = dataSource.getRepository(ReviewComment);
 
-  const GOALS = [
-    { name: 'Emergency Fund', target: 10000, current: 3500, months: 12 },
-    { name: 'Vacation', target: 3000, current: 1200, months: 6 },
-    { name: 'New Laptop', target: 2000, current: 800, months: 4 },
+  const REVIEWS = [
+    { title: 'Great product', rating: 5, itemCount: 3 },
+    { title: 'Average quality', rating: 3, itemCount: 2 },
+    { title: 'Not recommended', rating: 1, itemCount: 1 },
   ];
 
-  for (const goalData of GOALS) {
-    const targetDate = new Date();
-    targetDate.setMonth(targetDate.getMonth() + goalData.months);
-
-    const goal = goalRepo.create({
+  for (const reviewData of REVIEWS) {
+    const review = reviewRepo.create({
       userId: user.id,
-      name: goalData.name,
-      targetAmount: goalData.target,
-      currentAmount: goalData.current,
-      targetDate: targetDate,
+      title: reviewData.title,
+      rating: reviewData.rating,
+      content: `This is a sample review with rating ${reviewData.rating}/5.`,
     });
-    await goalRepo.save(goal);
+    await reviewRepo.save(review);
 
-    // Generate contributions to match currentAmount
-    let remaining = goalData.current;
-    const contributionCount = Math.floor(Math.random() * 5) + 3;
-    const contributions: Partial<GoalContribution>[] = [];
+    // Generate comments
+    const commentCount = Math.floor(Math.random() * 3) + 1;
+    const comments: Partial<ReviewComment>[] = [];
 
-    for (let i = 0; i < contributionCount && remaining > 0; i++) {
-      const amount = i === contributionCount - 1
-        ? remaining
-        : Math.min(randomAmount(100, 500), remaining);
-
+    for (let i = 0; i < commentCount; i++) {
       const date = new Date();
-      date.setDate(date.getDate() - (i * 7));  // Weekly contributions
+      date.setDate(date.getDate() - (i * 2));
 
-      contributions.push({
-        goalId: goal.id,
-        amount: amount,
+      comments.push({
+        reviewId: review.id,
+        content: `Sample comment #${commentCount - i}`,
         date: date,
-        note: `Contribution #${contributionCount - i}`,
       });
-
-      remaining -= amount;
     }
 
-    await contribRepo.save(contributions.map(c => contribRepo.create(c)));
+    await commentRepo.save(comments.map(c => commentRepo.create(c)));
   }
 }
 ```
@@ -300,7 +286,7 @@ export async function seedSupportTickets(
 
   const TICKETS = [
     {
-      subject: 'Cannot export transactions',
+      subject: 'Cannot export data',
       status: TicketStatusEnum.RESOLVED,
       priority: TicketPriorityEnum.MEDIUM,
       messages: [
@@ -390,16 +376,16 @@ export async function seedUserRoles(
 
 ```typescript
 // Create some soft-deleted records for testing restore/audit features
-const deletedTransaction = repo.create({
+const deletedOrder = repo.create({
   userId: user.id,
   categoryId: category.id,
-  type: TransactionTypeEnum.EXPENSE,
+  type: OrderStatusEnum.PENDING,
   amount: 50,
-  description: 'Deleted expense (for testing)',
+  description: 'Deleted general (for testing)',
   date: new Date(),
 });
-await repo.save(deletedTransaction);
-await repo.softDelete(deletedTransaction.id);
+await repo.save(deletedOrder);
+await repo.softDelete(deletedOrder.id);
 ```
 
 ### Querying with Soft Deletes
@@ -448,10 +434,10 @@ async function resetAndSeed() {
   // Delete in reverse dependency order
   await dataSource.getRepository(TicketMessage).delete({});
   await dataSource.getRepository(SupportTicket).delete({});
-  await dataSource.getRepository(GoalContribution).delete({});
-  await dataSource.getRepository(Goal).delete({});
-  await dataSource.getRepository(Transaction).delete({});
-  await dataSource.getRepository(Budget).delete({});
+  await dataSource.getRepository(ReviewComment).delete({});
+  await dataSource.getRepository(Review).delete({});
+  await dataSource.getRepository(Order).delete({});
+  await dataSource.getRepository(Order).delete({});
   await dataSource.getRepository(Category).delete({});
   await dataSource.getRepository(User).delete({});
 

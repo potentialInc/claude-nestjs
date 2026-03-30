@@ -125,16 +125,16 @@ imageUrl: string;
 // Video URLs
 @ApiProperty({
     example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    description: 'Exercise demonstration video URL',
+    description: 'Item demonstration video URL',
 })
 videoUrl: string;
 
-// Zoom links
+// External links
 @ApiProperty({
-    example: 'https://zoom.us/j/1234567890?pwd=abc123',
-    description: 'Zoom meeting link',
+    example: 'https://meet.example.com/abc123',
+    description: 'Meeting link',
 })
-zoomLink: string;
+meetingLink: string;
 ```
 
 ### Dates and Times
@@ -151,7 +151,7 @@ scheduledAt: string;
 // Date only
 @ApiProperty({
     example: '2025-01-15',
-    description: 'Survey date',
+    description: 'Created date',
     format: 'date',
 })
 date: string;
@@ -222,7 +222,7 @@ rememberMe?: boolean;
 
 @ApiPropertyOptional({
     example: true,
-    description: 'Whether the exercise is active',
+    description: 'Whether the item is active',
     default: true,
 })
 isActive?: boolean;
@@ -269,7 +269,7 @@ tags?: string[];
 description?: string;
 
 @ApiPropertyOptional({
-    example: 'Monthly check-up to review exercise progress',
+    example: 'Monthly check-up to review item progress',
     description: 'Optional memo or notes for the meeting',
 })
 memo?: string;
@@ -305,14 +305,14 @@ import { ApiSwagger } from 'src/core/decorators/api-swagger.decorator';
 ```typescript
 @Post()
 @ApiSwagger({
-    resourceName: 'Exercise',
+    resourceName: 'Item',
     operation: 'create',
-    requestDto: CreateExerciseDto,
-    responseDto: Exercise,
+    requestDto: CreateItemDto,
+    responseDto: Item,
     successStatus: 201,
     requiresAuth: true,
 })
-async create(@Body() dto: CreateExerciseDto): Promise<CreatedResponseDto<Exercise>> {
+async create(@Body() dto: CreateItemDto): Promise<CreatedResponseDto<Item>> {
     // ...
 }
 ```
@@ -323,14 +323,14 @@ async create(@Body() dto: CreateExerciseDto): Promise<CreatedResponseDto<Exercis
 @Get()
 @Public()
 @ApiSwagger({
-    resourceName: 'Exercises',
+    resourceName: 'Items',
     operation: 'getAll',
-    responseDto: Exercise,
+    responseDto: Item,
     isArray: true,
     requiresAuth: false,
     withPagination: true,
 })
-async findAll(@Query() pagination: PaginationDto): Promise<PaginatedResponseDto<Exercise>> {
+async findAll(@Query() pagination: PaginationDto): Promise<PaginatedResponseDto<Item>> {
     // ...
 }
 ```
@@ -340,12 +340,12 @@ async findAll(@Query() pagination: PaginationDto): Promise<PaginatedResponseDto<
 ```typescript
 @Get(':id')
 @ApiSwagger({
-    resourceName: 'Exercise',
+    resourceName: 'Item',
     operation: 'getOne',
-    responseDto: Exercise,
+    responseDto: Item,
     requiresAuth: true,
 })
-async findOne(@Param('id') id: string): Promise<SuccessResponseDto<Exercise>> {
+async findOne(@Param('id') id: string): Promise<SuccessResponseDto<Item>> {
     // ...
 }
 ```
@@ -355,16 +355,16 @@ async findOne(@Param('id') id: string): Promise<SuccessResponseDto<Exercise>> {
 ```typescript
 @Patch(':id')
 @ApiSwagger({
-    resourceName: 'Exercise',
+    resourceName: 'Item',
     operation: 'update',
-    requestDto: UpdateExerciseDto,
-    responseDto: Exercise,
+    requestDto: UpdateItemDto,
+    responseDto: Item,
     requiresAuth: true,
 })
 async update(
     @Param('id') id: string,
-    @Body() dto: UpdateExerciseDto,
-): Promise<UpdatedResponseDto<Exercise>> {
+    @Body() dto: UpdateItemDto,
+): Promise<UpdatedResponseDto<Item>> {
     // ...
 }
 ```
@@ -374,7 +374,7 @@ async update(
 ```typescript
 @Delete(':id')
 @ApiSwagger({
-    resourceName: 'Exercise',
+    resourceName: 'Item',
     operation: 'delete',
     requiresAuth: true,
 })
@@ -426,7 +426,7 @@ async toggleFeatured(@Param('id') id: string): Promise<UpdatedResponseDto<Featur
 
 | Option           | Type    | Default      | Description                               |
 | ---------------- | ------- | ------------ | ----------------------------------------- |
-| `resourceName`   | string  | **required** | Resource name (e.g., 'User', 'Exercise')  |
+| `resourceName`   | string  | **required** | Resource name (e.g., 'User', 'Item')  |
 | `operation`      | string  | `'custom'`   | Operation type for auto-generated summary |
 | `summary`        | string  | auto         | Custom operation summary                  |
 | `requestDto`     | Type    | -            | Request body DTO class                    |
@@ -498,9 +498,9 @@ Always add `@ApiTags()` to group endpoints:
 ```typescript
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Exercises')
-@Controller('exercises')
-export class ExerciseController {
+@ApiTags('Items')
+@Controller('items')
+export class ItemController {
     // ...
 }
 ```
@@ -549,9 +549,9 @@ When creating or updating API documentation:
 @Get()
 @Public()
 @ApiSwagger({
-    resourceName: 'Exercises',
+    resourceName: 'Items',
     operation: 'getAll',
-    responseDto: Exercise,
+    responseDto: Item,
     isArray: true,
     requiresAuth: false,  // Important: matches @Public()
 })
@@ -563,10 +563,10 @@ When creating or updating API documentation:
 @Post()
 @Roles(RolesEnum.ADMIN)
 @ApiSwagger({
-    resourceName: 'Exercise',
+    resourceName: 'Item',
     operation: 'create',
-    requestDto: CreateExerciseDto,
-    responseDto: Exercise,
+    requestDto: CreateItemDto,
+    responseDto: Item,
     successStatus: 201,
     requiresAuth: true,  // Default, but explicit is good
 })

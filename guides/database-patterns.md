@@ -700,8 +700,8 @@ async transferFunds(fromId: string, toId: string, amount: number): Promise<void>
             amount,
         );
 
-        // Create transaction record
-        await manager.save(Transaction, {
+        // Create transfer record
+        await manager.save(TransferLog, {
             fromId,
             toId,
             amount,

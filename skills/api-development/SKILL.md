@@ -499,9 +499,29 @@ The agent will:
 
 ---
 
+---
+
+## MANDATORY Pre-Implementation Checklist
+
+Before writing ANY endpoint code:
+
+- [ ] **Read** `.claude/base/docs/SECURITY_AND_OPTIMIZATION.md`
+- [ ] **Read** `.claude/nestjs/guides/best-practices.md`
+- [ ] **Verify** entity extends `BaseEntity`
+- [ ] **Verify** repository extends `BaseRepository`
+- [ ] **Verify** service extends `BaseService`
+- [ ] **Verify** controller extends `BaseController`
+- [ ] **All exception messages** use `I18nHelper.t()` — NO hardcoded strings
+- [ ] **All config access** via `UnifiedConfig` — NO `process.env`
+- [ ] **All constrained values** are TypeScript enums in `shared/enums/`
+- [ ] **Swagger decorators** on every controller method (`@ApiOperation`, `@ApiResponse`)
+- [ ] **class-validator** on every DTO field
+- [ ] **Grep for existing endpoints** before creating new ones
+
 ## Related Resources
 
 - [backend-developer agent](../../agents/backend-developer.md) - Complete autonomous workflow
 - [NestJS guides](../../guides/) - Architecture, patterns, best practices
 - [Base classes](../../../../backend/src/core/base/) - BaseEntity, BaseService, BaseRepository, BaseController
 - [e2e-testing skill](./e2e-testing/SKILL.md) - E2E test generation patterns
+- [auto-error-resolver](../../agents/auto-error-resolver.md) - TypeScript error fixing after implementation

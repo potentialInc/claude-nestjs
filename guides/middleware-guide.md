@@ -755,4 +755,4 @@ export function ApiSwagger(options: {
 - [SKILL.md](../SKILL.md) - Main guide
 - [routing-and-controllers.md](routing-and-controllers.md) - Controllers and decorators
 - [async-and-errors.md](async-and-errors.md) - Error handling patterns
-- [authentication-guide.md](../../docs/AUTHENTICATION-GUIDE.md) - JWT authentication details
+- [authentication-cookies.md](authentication-cookies.md) - JWT authentication and cookie patterns
