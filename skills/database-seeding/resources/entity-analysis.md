@@ -39,11 +39,11 @@ backend/src/
 ├── modules/
 │   ├── users/user.entity.ts
 │   ├── categories/category.entity.ts
-│   ├── transactions/transaction.entity.ts
-│   ├── budgets/budget.entity.ts
-│   ├── goals/
-│   │   ├── goal.entity.ts
-│   │   └── goal-contribution.entity.ts
+│   ├── order-items/order-item.entity.ts
+│   ├── orders/order.entity.ts
+│   ├── reviews/
+│   │   ├── review.entity.ts
+│   │   └── review-comment.entity.ts
 │   ├── support/
 │   │   ├── support-ticket.entity.ts
 │   │   └── ticket-message.entity.ts
@@ -71,7 +71,7 @@ backend/src/
 
 // Relationships
 @ManyToOne(() => User, { onDelete: 'CASCADE' })
-@OneToMany(() => Transaction, (t) => t.user)
+@OneToMany(() => OrderItem, (t) => t.user)
 @OneToOne(() => Settings, { cascade: true })
 @ManyToMany(() => Role)
 @JoinColumn({ name: 'user_id' })
@@ -100,14 +100,12 @@ For each entity, document:
 | displayName | string | no | - | |
 | role | RolesEnum | no | USER | |
 | status | ActiveStatusEnum | no | ACTIVE | |
-| currency | CurrencyEnum | no | USD | |
-| monthlyIncome | decimal | yes | - | |
+| avatarUrl | string | yes | - | |
 
 **Relationships**:
-- OneToMany → Transaction (user.transactions)
-- OneToMany → Budget (user.budgets)
-- OneToMany → Goal (user.goals)
-- OneToOne → UserNotificationSettings
+- OneToMany → Order (user.orders)
+- OneToMany → Review (user.reviews)
+- OneToOne → UserProfile
 
 **Constraints**:
 - Unique: email
@@ -121,12 +119,12 @@ For each entity, document:
 ### Relationship Types
 
 ```typescript
-// One-to-Many: User has many Transactions
+// One-to-Many: User has many OrderItems
 // User entity
-@OneToMany(() => Transaction, (t) => t.user)
-transactions: Transaction[];
+@OneToMany(() => OrderItem, (t) => t.user)
+orderItems: OrderItem[];
 
-// Transaction entity
+// OrderItem entity
 @ManyToOne(() => User, { onDelete: 'CASCADE' })
 @JoinColumn({ name: 'user_id' })
 user: User;
@@ -149,13 +147,13 @@ Level 1 (Depends on Level 0):
 ├── UserNotificationSettings (depends on User)
 
 Level 2 (Depends on Levels 0-1):
-├── Budget (depends on User, Category)
-├── Transaction (depends on User, Category)
-├── Goal (depends on User)
+├── Order (depends on User, Category)
+├── OrderItem (depends on User, Category)
+├── Review (depends on User)
 ├── SupportTicket (depends on User)
 
 Level 3 (Depends on Levels 0-2):
-├── GoalContribution (depends on Goal)
+├── ReviewComment (depends on Review)
 ├── TicketMessage (depends on SupportTicket)
 ```
 
@@ -166,13 +164,13 @@ Document cascade delete behaviors:
 ```markdown
 | Parent | Child | On Delete |
 |--------|-------|-----------|
-| User | Transaction | CASCADE |
-| User | Budget | CASCADE |
-| User | Goal | CASCADE |
+| User | OrderItem | CASCADE |
+| User | Order | CASCADE |
+| User | Review | CASCADE |
 | User | SupportTicket | CASCADE |
-| Category | Transaction | SET NULL |
-| Category | Budget | CASCADE |
-| Goal | GoalContribution | CASCADE |
+| Category | OrderItem | SET NULL |
+| Category | Order | CASCADE |
+| Review | ReviewComment | CASCADE |
 | SupportTicket | TicketMessage | CASCADE |
 ```
 
@@ -198,14 +196,14 @@ ls backend/src/shared/enums/
 **Used by**: User.status, Category.status
 **Type**: Numeric
 
-### CurrencyEnum
-**Values**: USD, KRW, EUR, GBP, JPY
-**Used by**: User.currency
+### CategoryTypeEnum
+**Values**: GENERAL, FEATURED, ARCHIVED
+**Used by**: Category.type
 **Type**: String
 
-### TransactionTypeEnum
-**Values**: INCOME, EXPENSE
-**Used by**: Transaction.type
+### OrderStatusEnum
+**Values**: PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+**Used by**: Order.status
 **Type**: String
 
 ### CategoryTypeEnum
@@ -213,9 +211,9 @@ ls backend/src/shared/enums/
 **Used by**: Category.type
 **Type**: String
 
-### BudgetPeriodEnum
+### OrderPeriodEnum
 **Values**: WEEKLY, MONTHLY
-**Used by**: Budget.period
+**Used by**: Order.period
 **Type**: String
 ```
 
@@ -226,10 +224,10 @@ ls backend/src/shared/enums/
 import {
   ActiveStatusEnum,    // 1, 2, 3
   RolesEnum,           // 1, 2, 3
-  CurrencyEnum,        // 'USD', 'KRW', etc.
-  TransactionTypeEnum, // 'INCOME', 'EXPENSE'
+  CategoryTypeEnum,        // 'USD', 'KRW', etc.
+  OrderItemTypeEnum, // 'CONFIRMED', 'PENDING'
   CategoryTypeEnum,    // 'SYSTEM', 'CUSTOM'
-  BudgetPeriodEnum,    // 'WEEKLY', 'MONTHLY'
+  OrderPeriodEnum,    // 'WEEKLY', 'MONTHLY'
 } from '@shared/enums';
 ```
 
@@ -257,13 +255,13 @@ export const SEED_ORDER = [
   'UserNotificationSettings',
 
   // Level 2: Depends on User + Category
-  'Budget',
-  'Transaction',
-  'Goal',
+  'Order',
+  'OrderItem',
+  'Review',
   'SupportTicket',
 
   // Level 3: Depends on Level 2
-  'GoalContribution',
+  'ReviewComment',
   'TicketMessage',
 ];
 ```
@@ -328,13 +326,13 @@ await userRepo.update(user.id, { managerId: anotherUser.id });
 - UserNotificationSettings
 
 **Level 2**:
-- Budget
-- Transaction
-- Goal
+- Order
+- OrderItem
+- Review
 - SupportTicket
 
 **Level 3** (seed last):
-- GoalContribution
+- ReviewComment
 - TicketMessage
 
 ## Enums
@@ -342,7 +340,7 @@ await userRepo.update(user.id, { managerId: anotherUser.id });
 | Enum | Type | Values |
 |------|------|--------|
 | ActiveStatusEnum | numeric | 1, 2, 3 |
-| CurrencyEnum | string | USD, KRW, EUR, GBP, JPY |
+| CategoryTypeEnum | string | USD, KRW, EUR, GBP, JPY |
 
 ## Seed Data Recommendations
 
@@ -352,16 +350,16 @@ await userRepo.update(user.id, { managerId: anotherUser.id });
 
 ### Test Data (per user)
 - 1 Test user with verified email
-- 30 days of transactions (50-100 records)
-- 3 budgets (different periods)
-- 2 goals with contributions
+- 30 days of orders (50-100 records)
+- 3 orders (different statuses)
+- 2 reviews with comments
 - 1 support ticket with messages
 
 ## Special Considerations
 
 - User.password must be hashed
 - Category.userId is null for system categories
-- Transaction amounts should be decimal(12,2)
+- OrderItem amounts should be decimal(12,2)
 ```
 
 ---

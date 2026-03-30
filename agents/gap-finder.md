@@ -3,6 +3,10 @@ name: gap-finder
 description: NestJS-specific gap analysis. Scans NestJS backend applications for missing endpoints, Swagger documentation, DTO validation, auth guards, error handling, and response shape consistency.
 model: sonnet
 color: orange
+tools: Read, Bash, Glob, Grep
+team: team-quality
+role: member
+reports-to: quality-lead
 ---
 
 # NestJS Gap Finder

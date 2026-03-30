@@ -513,7 +513,7 @@ curl -s -X GET 'http://localhost:3000/posts/published' \
 
 | Data Type | TTL | Example |
 |-----------|-----|---------|
-| Static catalogs | `'catalog'` (1h) | Exercises, products, features |
+| Static catalogs | `'catalog'` (1h) | Items, products, categories |
 | Entity lists | `'list'` (30m) | Users, assignments, meetings |
 | Computed stats | `'stats'` (15m) | Dashboard, aggregates |
 | User-specific | `'default'` (5m) | Profiles, preferences |
@@ -524,12 +524,12 @@ curl -s -X GET 'http://localhost:3000/posts/published' \
 ```typescript
 // Cache GET endpoints with appropriate TTL
 @Get()
-@Cacheable({ key: 'exercises:all', ttl: 'catalog' })
+@Cacheable({ key: 'items:all', ttl: 'catalog' })
 async findAll() { ... }
 
 // Invalidate on mutations
 @Post()
-@CacheInvalidate({ patterns: ['exercises:*'] })
+@CacheInvalidate({ patterns: ['items:*'] })
 async create(@Body() dto: CreateDto) { ... }
 
 // Use userAware for user-specific data
@@ -631,3 +631,75 @@ private extractToken(client: Socket): string | null {
 | `message:typing` | Bidirectional | Typing indicator |
 | `message:read` | Bidirectional | Read receipt |
 | `user:online` | Server -> Client | Online status change |
+
+---
+
+## MANDATORY Rules (from Base Architecture)
+
+### UnifiedConfig — No Direct `process.env`
+
+All environment variable access MUST go through `UnifiedConfig`:
+
+```typescript
+// BAD: Direct process.env access
+const secret = process.env.JWT_SECRET;
+
+// GOOD: UnifiedConfig
+import { UnifiedConfig } from '@/config/unified-config';
+const secret = UnifiedConfig.jwt.secret;
+```
+
+- NEVER use `process.env` directly in services, controllers, or utilities
+- All config values defined in `UnifiedConfig` class with validation
+- Missing required values MUST throw on startup (not fallback to defaults)
+
+### Enum Centralization
+
+ALL constrained values (status, role, type) MUST be TypeScript enums:
+
+```typescript
+// Location: backend/src/shared/enums/user-status.enum.ts
+export enum UserStatusEnum {
+  ACTIVE = 'active',
+  SUSPENDED = 'suspended',
+}
+```
+
+- Create in `backend/src/shared/enums/` with `Enum` suffix
+- Export from barrel `backend/src/shared/enums/index.ts`
+- Reference in entity: `@Column({ type: 'enum', enum: UserStatusEnum })`
+- After creating/modifying enums, run `/sync-enums` to sync to frontend
+- No hardcoded string literals for constrained values
+
+### Pagination Defaults
+
+- Default `limit`: 20
+- Maximum `limit`: 100
+- All list endpoints MUST support pagination
+- Response shape: `{ data: T[], total: number, totalPages: number, page: number, limit: number }`
+
+### Rate Limiting
+
+- Public endpoints (login, register, forgot-password) MUST have rate limiting
+- Use `@nestjs/throttler` or custom guard
+- Default: 10 requests per 60 seconds for auth endpoints
+
+### File Size Constraints
+
+| Layer | Max Lines | Action at Limit |
+|-------|-----------|-----------------|
+| Controller | 200 | Split into sub-controllers |
+| Service | 300 | Extract helper services |
+| Repository | 200 | Extract query builders |
+
+### Sentry Error Context
+
+When throwing exceptions in services, enrich with Sentry context:
+
+```typescript
+import * as Sentry from '@sentry/node';
+
+// Add context before throwing
+Sentry.setContext('operation', { userId, action: 'createOrder' });
+throw new ConflictException(I18nHelper.t('order.alreadyExists'));
+```

@@ -16,7 +16,7 @@ Comprehensive guide for creating database seed files in NestJS/TypeORM projects.
 
 Create idempotent, well-structured seed files that populate your database with:
 - **System data**: Admin users, default categories, configuration
-- **Test data**: Sample users, transactions, and related entities for development/testing
+- **Test data**: Sample users, orders, and related entities for development/testing
 - **E2E test fixtures**: Predictable data for automated testing
 
 ---
@@ -57,10 +57,10 @@ Independent (seed first):
 ├── Category (system categories)
 
 Dependent (seed after parents):
-├── Budget (depends on User, Category)
-├── Transaction (depends on User, Category)
-├── Goal (depends on User)
-├── GoalContribution (depends on Goal)
+├── Order (depends on User, Category)
+├── OrderItem (depends on Order, Item)
+├── Review (depends on User)
+├── ReviewComment (depends on Review)
 ├── SupportTicket (depends on User)
 ├── TicketMessage (depends on SupportTicket)
 ```
@@ -73,9 +73,9 @@ backend/src/database/seeders/
 ├── index.ts              # Main runner
 ├── user.seed.ts          # User seeder
 ├── category.seed.ts      # Category seeder
-├── budget.seed.ts        # Budget seeder
-├── transaction.seed.ts   # Transaction seeder
-├── goal.seed.ts          # Goal + contributions seeder
+├── order.seed.ts        # Order seeder
+├── order.seed.ts        # Order seeder
+├── review.seed.ts          # Review + contributions seeder
 └── support.seed.ts       # Support ticket seeder
 ```
 
@@ -105,9 +105,9 @@ import { UtilsService } from '@infrastructure/utils/utils.service';
 // Import seeders
 import { seedUsers } from './user.seed';
 import { seedCategories } from './category.seed';
-import { seedBudgets } from './budget.seed';
-import { seedTransactions } from './transaction.seed';
-import { seedGoals } from './goal.seed';
+import { seedOrders } from './order.seed';
+import { seedOrders } from './order.seed';
+import { seedReviews } from './review.seed';
 
 async function runSeeder() {
   console.log('Starting database seeding...\n');
@@ -120,9 +120,9 @@ async function runSeeder() {
     // Seed in dependency order
     const users = await seedUsers(dataSource, utilsService);
     const categories = await seedCategories(dataSource);
-    await seedBudgets(dataSource, users, categories);
-    await seedTransactions(dataSource, users, categories);
-    await seedGoals(dataSource, users);
+    await seedOrders(dataSource, users, categories);
+    await seedOrders(dataSource, users, categories);
+    await seedReviews(dataSource, users);
 
     console.log('\n=== Seeding Complete ===');
   } catch (error) {
@@ -142,7 +142,7 @@ runSeeder();
 // user.seed.ts
 import { DataSource } from 'typeorm';
 import { User } from 'src/modules/users/user.entity';
-import { RolesEnum, ActiveStatusEnum, CurrencyEnum } from '@shared/enums';
+import { RolesEnum, ActiveStatusEnum } from '@shared/enums';
 import { UtilsService } from '@infrastructure/utils/utils.service';
 
 export interface SeededUsers {
@@ -160,7 +160,7 @@ export async function seedUsers(
   const existing = await repo.findOne({ where: { email: 'admin@example.com' } });
   if (existing) {
     console.log('Users already seeded, fetching existing...');
-    const testUser = await repo.findOne({ where: { email: 'testuser@pennywise.app' } });
+    const testUser = await repo.findOne({ where: { email: 'user@example.com' } });
     return { admin: existing, testUser: testUser! };
   }
 
@@ -174,24 +174,21 @@ export async function seedUsers(
     role: RolesEnum.ADMIN,
     status: ActiveStatusEnum.ACTIVE,
     emailVerified: true,
-    currency: CurrencyEnum.USD,
   });
   await repo.save(admin);
   console.log('  - Admin: admin@example.com / Admin123!');
 
   // Test user (for E2E tests)
   const testUser = repo.create({
-    email: 'testuser@pennywise.app',
-    password: await utilsService.getHash('TestPassword123!'),
+    email: 'user@example.com',
+    password: await utilsService.getHash('Password123!'),
     displayName: 'Test User',
     role: RolesEnum.USER,
     status: ActiveStatusEnum.ACTIVE,
     emailVerified: true,
-    currency: CurrencyEnum.USD,
-    monthlyIncome: 5000,
   });
   await repo.save(testUser);
-  console.log('  - Test User: testuser@pennywise.app / TestPassword123!');
+  console.log('  - Test User: user@example.com / Password123!');
 
   return { admin, testUser };
 }
@@ -206,16 +203,14 @@ import { Category } from 'src/modules/categories/category.entity';
 import { CategoryTypeEnum, ActiveStatusEnum } from '@shared/enums';
 
 const SYSTEM_CATEGORIES = [
-  { name: 'Food & Dining', icon: 'utensils' },
-  { name: 'Transportation', icon: 'car' },
-  { name: 'Shopping', icon: 'shopping-bag' },
-  { name: 'Entertainment', icon: 'film' },
-  { name: 'Utilities', icon: 'bolt' },
-  { name: 'Health & Fitness', icon: 'heart' },
-  { name: 'Education', icon: 'book' },
-  { name: 'Salary', icon: 'wallet' },
-  { name: 'Investment', icon: 'trending-up' },
-  { name: 'Other Income', icon: 'plus-circle' },
+  { name: 'Electronics', icon: 'cpu' },
+  { name: 'Clothing', icon: 'shirt' },
+  { name: 'Books', icon: 'book' },
+  { name: 'Home & Garden', icon: 'home' },
+  { name: 'Sports', icon: 'activity' },
+  { name: 'Featured', icon: 'star' },
+  { name: 'Premium', icon: 'award' },
+  { name: 'General', icon: 'grid' },
 ];
 
 export async function seedCategories(dataSource: DataSource): Promise<Category[]> {
@@ -248,75 +243,50 @@ export async function seedCategories(dataSource: DataSource): Promise<Category[]
 }
 ```
 
-### Transaction Seeder (Test Data)
+### Order Seeder (Test Data)
 
 ```typescript
-// transaction.seed.ts
+// order.seed.ts
 import { DataSource } from 'typeorm';
-import { Transaction } from 'src/modules/transactions/transaction.entity';
-import { TransactionTypeEnum } from '@shared/enums';
+import { Order } from 'src/modules/orders/order.entity';
+import { OrderStatusEnum } from '@shared/enums';
 import { User } from 'src/modules/users/user.entity';
-import { Category } from 'src/modules/categories/category.entity';
+import { Item } from 'src/modules/items/item.entity';
 import { SeededUsers } from './user.seed';
 
-export async function seedTransactions(
+export async function seedOrders(
   dataSource: DataSource,
   users: SeededUsers,
-  categories: Category[],
+  items: Item[],
 ): Promise<void> {
-  const repo = dataSource.getRepository(Transaction);
+  const repo = dataSource.getRepository(Order);
 
   // Check existing
   const count = await repo.count({ where: { userId: users.testUser.id } });
   if (count > 0) {
-    console.log(`Transactions already exist for test user (${count})`);
+    console.log(`Orders already exist for test user (${count})`);
     return;
   }
 
-  console.log('Seeding transactions...');
+  console.log('Seeding orders...');
 
-  const expenseCategories = categories.filter(c =>
-    ['Food & Dining', 'Transportation', 'Shopping'].includes(c.name)
-  );
-  const incomeCategory = categories.find(c => c.name === 'Salary')!;
+  const orders: Partial<Order>[] = [];
+  const statuses = Object.values(OrderStatusEnum);
 
-  // Generate last 30 days of transactions
-  const now = new Date();
-  const transactions: Partial<Transaction>[] = [];
-
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-
-    // Add 1-3 expenses per day
-    const expenseCount = Math.floor(Math.random() * 3) + 1;
-    for (let j = 0; j < expenseCount; j++) {
-      const category = expenseCategories[Math.floor(Math.random() * expenseCategories.length)];
-      transactions.push({
-        userId: users.testUser.id,
-        categoryId: category.id,
-        type: TransactionTypeEnum.EXPENSE,
-        amount: Math.round((Math.random() * 100 + 10) * 100) / 100,
-        description: `${category.name} expense`,
-        date: date,
-      });
-    }
-
-    // Add salary on 1st and 15th
-    if (date.getDate() === 1 || date.getDate() === 15) {
-      transactions.push({
-        userId: users.testUser.id,
-        categoryId: incomeCategory.id,
-        type: TransactionTypeEnum.INCOME,
-        amount: 2500,
-        description: 'Salary deposit',
-        date: date,
-      });
-    }
+  for (let i = 0; i < 10; i++) {
+    const item = items[Math.floor(Math.random() * items.length)];
+    orders.push({
+      userId: users.testUser.id,
+      itemId: item.id,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      quantity: Math.floor(Math.random() * 5) + 1,
+      totalAmount: Math.round((Math.random() * 200 + 10) * 100) / 100,
+      createdAt: new Date(Date.now() - i * 86400000),
+    });
   }
 
-  await repo.save(transactions.map(t => repo.create(t)));
-  console.log(`  - Created ${transactions.length} transactions`);
+  await repo.save(orders.map(o => repo.create(o)));
+  console.log(`  - Created ${orders.length} orders`);
 }
 ```
 
@@ -346,10 +316,10 @@ Seed entities in order of foreign key dependencies:
 1. Users (no FK dependencies)
 2. Categories (optional user FK, system categories have null)
 3. NotificationSettings (depends on User)
-4. Budgets (depends on User, Category)
-5. Transactions (depends on User, Category)
-6. Goals (depends on User)
-7. GoalContributions (depends on Goal)
+4. Orders (depends on User, Category)
+5. OrderItems (depends on Order, Item)
+6. Reviews (depends on User)
+7. ReviewComments (depends on Review)
 8. SupportTickets (depends on User)
 9. TicketMessages (depends on SupportTicket)
 ```
@@ -364,7 +334,7 @@ const users = await seedUsers(dataSource, utilsService);
 const categories = await seedCategories(dataSource);
 
 // Use returned entities
-await seedBudgets(dataSource, users, categories);
+await seedOrders(dataSource, users, categories);
 ```
 
 ### 4. Password Hashing
@@ -383,7 +353,7 @@ Generate realistic but safe test data:
 
 ```typescript
 // Email format that won't accidentally send emails
-email: 'testuser@pennywise.app'  // or use @example.com
+email: 'user@example.com'  // or use @example.com
 
 // Realistic amounts
 amount: Math.round((Math.random() * 100 + 10) * 100) / 100
@@ -440,6 +410,48 @@ npm run seed:reset
 - [Test Data Generators](resources/test-data-generators.md) - Realistic data generation patterns
 
 ---
+
+---
+
+## MANDATORY: _fixtures.yaml Convention
+
+Seed scripts MUST read credentials from `.claude-project/user_stories/_fixtures.yaml` — NOT hardcode email/password.
+
+```yaml
+# .claude-project/user_stories/_fixtures.yaml
+users:
+  admin:
+    email: admin@example.com
+    password: Admin123!
+    role: admin
+  user:
+    email: user@example.com
+    password: User123!
+    role: user
+```
+
+Seed script reads this file:
+
+```typescript
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+
+const fixtures = yaml.load(fs.readFileSync('.claude-project/user_stories/_fixtures.yaml', 'utf8'));
+
+for (const [key, user] of Object.entries(fixtures.users)) {
+  await userRepository.upsert({
+    email: user.email,
+    password: await bcrypt.hash(user.password, 12),
+    role: user.role,
+  }, ['email']);
+}
+```
+
+**Rules:**
+- Hardcoding email/password in seed script is PROHIBITED
+- Must parse `_fixtures.yaml` as single source of truth
+- Idempotency required: `upsert` or `findOne → skip if exists`
+- Register in `package.json`: `"prisma": { "seed": "ts-node prisma/seed.ts" }`
 
 ## Related Skills
 

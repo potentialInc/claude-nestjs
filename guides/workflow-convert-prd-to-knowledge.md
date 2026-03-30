@@ -60,8 +60,8 @@ From the PRD content, extract the following categories:
 - Target users and their roles
 
 #### 2. User Types
-- PATIENT: Description and default sign-up behavior
-- COACH: Description and assignment process
+- USER: Description and default sign-up behavior
+- ADMIN: Description and assignment process
 
 #### 3. Core Features by Role
 
@@ -70,25 +70,24 @@ From the PRD content, extract the following categories:
 - Sign-up process
 - Password reset flow
 
-**Patient Features (Section 2)**
+**User Features (Section 2)**
 - Home Dashboard
-- Exercise Module
-- Daily Survey
-- Chat functionality
+- Item Catalog
+- Order Management
+- Notification Center
 
-**Coach Features (Section 3)**
+**Admin Features (Section 3)**
 - Home Dashboard
-- My Patients management
+- User Management
 - Chat functionality
 
 #### 4. Key Data Entities
 Infer from feature inputs/outputs:
 - User fields
-- Exercise fields
-- ExerciseLog fields
-- DailySurvey fields
-- ZoomMeeting fields
-- ChatRoom/ChatMessage fields
+- Core entity fields (from PRD features)
+- Relationship/junction entity fields
+- Log/history entity fields
+- Supporting entity fields
 
 #### 5. Business Rules
 Collect all "Rules" subsections from the PRD, including:
@@ -131,15 +130,15 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 
 {Summarize the application's purpose in 1-2 paragraphs. Include:
 - What the app does
-- Who it serves (Patients and Coaches)
-- Core value proposition (exercise therapy management, health tracking, communication)}
+- Who it serves (target user roles)
+- Core value proposition (main features and benefits)}
 
 ### User Types
 
 | Role        | Description                                      | Default Sign-up     |
 | ----------- | ------------------------------------------------ | ------------------- |
-| **PATIENT** | {description from PRD}                           | {sign-up rule}      |
-| **COACH**   | {description from PRD}                           | {assignment rule}   |
+| **USER**    | {description from PRD}                           | {sign-up rule}      |
+| **ADMIN**   | {description from PRD}                           | {assignment rule}   |
 
 ### Core Features
 
@@ -149,78 +148,77 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 - **Sign-up**: {from PRD Sign Up page - required fields, verification}
 - **Password Reset**: {from PRD Forgot password - verification method}
 
-#### Patient Features
+#### User Features
 
 1. **Home Dashboard**
    {from PRD Section 2 - Home Tab}
    - Calendar with completion indicators
-   - Today's exercise status
-   - Today's survey status
-   - Upcoming Zoom meeting
+   - Recent activity summary
+   - Quick action shortcuts
+   - Upcoming meetings
 
-2. **Exercise Module**
-   {from PRD Section 2 - Exercise Tab}
-   - Exercise list with video links
+2. **Item Catalog**
+   {from PRD Section 2 - Items Tab}
+   - Item list with details
    - Timer functionality
    - Intensity ratings
-   - Exercise history
+   - Activity history
 
-3. **Daily Survey**
-   {from PRD Section 2 - Survey Tab}
+3. **Feedback / Reviews**
+   {from PRD Section 2 - Feedback Tab}
    - Sleep tracking fields
    - Muscle pain level
    - Step count
    - Medication compliance
-   - Survey history
+   - Feedback history
 
 4. **Chat**
    {from PRD Section 2 - Chat Tab}
    - Text & image messaging
    - System messages
 
-#### Coach Features
+#### Admin Features
 
 1. **Home Dashboard**
    {from PRD Section 3 - Home Tab}
-   - Today's Zoom meetings
+   - Today's scheduled meetings
    - Calendar view
    - Meeting management
 
-2. **My Patients**
-   {from PRD Section 3 - My patients Tab}
-   - Patient list
-   - Patient detail view
-   - Exercise/survey history viewing
+2. **User Management**
+   {from PRD Section 3 - Users Tab}
+   - User list
+   - User detail view
+   - Activity/order history viewing
 
 3. **Chat**
    {from PRD Section 3 - Chat Tab}
-   - Multi-patient chat rooms
+   - Group messaging
    - Search functionality
 
 ### Key Data Entities
 
 | Entity      | Description                                                                          |
 | ----------- | ------------------------------------------------------------------------------------ |
-| User        | username, password, fullName, phoneNumber, email, role (PATIENT/COACH)               |
-| Exercise    | title, description, videoUrl, sets, reps/duration                                    |
-| ExerciseLog | userId, date, totalTime, exercises[], overallIntensityRating                         |
-| DailySurvey | userId, date, bedtime, wakeUpTime, sleepQuality, musclePain, stepCount, etc.         |
-| ZoomMeeting | coachId, patientId, dateTime, zoomLink, status (scheduled/completed/cancelled), memo |
-| ChatRoom    | participants[]                                                                       |
-| ChatMessage | senderId, content, imageUrl, type (user/system), timestamp                           |
+| User        | username, password, fullName, phoneNumber, email, role (USER/ADMIN)                  |
+| Item        | title, description, category, status, imageUrl                                       |
+| Order       | userId, items[], totalAmount, status (pending/confirmed/cancelled)                   |
+| Review      | userId, itemId, rating, content, createdAt                                           |
+| Category    | name, description, parentId                                                          |
+| Notification| userId, title, content, type (system/user), isRead, timestamp                        |
 
 ### Business Rules
 
 {Bullet list of all rules extracted from PRD "Rules" sections:}
 
-- After successful sign-up, role = PATIENT
+- After successful sign-up, role = USER
 - User logs in with username + password
 - UI greetings always use Full Name (not username)
-- Patients can re-submit daily surveys (overwrites previous)
-- Exercise time accumulates per day across sessions
-- Zoom "Join" button enabled 10 minutes before meeting start
-- Auto-reminder to coach if meeting still "scheduled" 1 hour after end time
-- Changing/cancelling Zoom meeting sends system chat message
+- Users can re-submit feedback (overwrites previous)
+- Activity time accumulates per day across sessions
+- "Join" button enabled 10 minutes before meeting start
+- Auto-reminder to admin if task still "pending" 1 hour after deadline
+- Changing/cancelling a meeting sends system notification
 - {additional rules from PRD...}
 
 ---
@@ -262,11 +260,11 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 
 **Related Documentation**:
 
-- [Backend Development Guidelines](../skills/best-practices.md)
-- [Error Tracking Guide](../invocable/track-errors/SKILL.md)
-- [Route Testing Guide](../invocable/test-routes.md)
-- [Best Practices](BEST_PRACTICES.md)
-- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Backend Development Guidelines](best-practices.md)
+- [Sentry & Monitoring](sentry-and-monitoring.md)
+- [Authentication Cookies](authentication-cookies.md)
+- [Architecture Overview](architecture-overview.md)
+- [Testing Guide](testing-guide.md)
 ```
 
 ---
@@ -279,8 +277,8 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 |-------------|---------------------------|-------|
 | Header/Intro | Product Overview > Application Purpose | Summarize purpose |
 | Section 1. Common | Core Features > Common | Login, Signup, Password |
-| Section 2. Patient | Core Features > Patient Features | All patient tabs |
-| Section 3. Coach | Core Features > Coach Features | All coach tabs |
+| Section 2. User | Core Features > User Features | All user tabs |
+| Section 3. Admin | Core Features > Admin Features | All admin tabs |
 | Navigation Menus | Core Features structure | Use for organization |
 | "Rules" subsections | Business Rules | Collect all rules |
 | Feature inputs/fields | Key Data Entities | Infer entity structures |
@@ -290,12 +288,11 @@ Write the complete file to `.claude-project/docs/PROJECT_KNOWLEDGE.md` using the
 | PRD Feature | Entity Fields to Extract |
 |-------------|--------------------------|
 | Sign Up inputs | User: username, password, fullName, phoneNumber, email |
-| Exercise List | Exercise: title, description, videoUrl, status |
-| Exercise Timer | ExerciseLog: timeSpentSeconds, date |
-| Intensity Rating | ExerciseLog: intensityRating (1-10), eachIntensityRating (3-level) |
-| Survey questions | DailySurvey: all 7 fields from PRD |
-| Zoom meeting details | ZoomMeeting: patient, date, time, zoomLink, memo, status |
-| Chat features | ChatRoom, ChatMessage: senderId, content, imageUrl, type |
+| Item List | Item: title, description, imageUrl, status |
+| Order Details | Order: items[], totalAmount, status |
+| Review Form | Review: rating (1-5), content, userId |
+| Category browser | Category: name, description, parentId |
+| Notification list | Notification: title, content, type, isRead |
 
 ---
 

@@ -402,6 +402,6 @@ const jwtSecret = config.tokens.jwt;
 
 **Related Files:**
 
-- [SKILL.md](SKILL.md)
+- [API Development Skill](../skills/api-development/SKILL.md)
 - [testing-guide.md](testing-guide.md)
 - [async-and-errors.md](async-and-errors.md)

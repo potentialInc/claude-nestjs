@@ -3,6 +3,10 @@ name: compliance-checker
 description: Audits NestJS backend code for 35 mandatory rule violations and auto-fixes them (base classes, I18nHelper, controllers, auth, config, enum sync, exception filters, interceptors, shared DTOs, migrations, environment validation, decorators, response DTOs, seed architecture, type safety, DTO validation, file uploads, constants)
 model: sonnet
 color: yellow
+tools: Read, Edit, Bash, Glob, Grep
+team: team-quality
+role: member
+reports-to: quality-lead
 ---
 
 # NestJS Compliance Checker

@@ -21,6 +21,8 @@ Educational materials consulted during development - patterns, examples, and bes
 | [testing-guide.md](testing-guide.md) | Jest testing strategies |
 | [setup-role-base-access.md](setup-role-base-access.md) | RBAC implementation |
 | [best-practices.md](best-practices.md) | NestJS coding standards |
+| [authentication-cookies.md](authentication-cookies.md) | httpOnly cookies, JWT, token refresh |
+| [nestjs-backend-guide.md](nestjs-backend-guide.md) | Comprehensive NestJS backend reference |
 
 ## Workflows
 
