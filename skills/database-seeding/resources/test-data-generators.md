@@ -116,18 +116,12 @@ randomAmount(100, 1000, 'ten');    // 580
 
 ```typescript
 const AMOUNT_RANGES = {
-  // Expenses
-  'Food & Dining': { min: 5, max: 80 },
-  'Transportation': { min: 2, max: 100 },
-  'Shopping': { min: 10, max: 200 },
-  'Entertainment': { min: 10, max: 100 },
-  'Utilities': { min: 50, max: 300 },
-  'Health': { min: 20, max: 500 },
-
-  // Income
-  'Salary': { min: 2000, max: 8000 },
-  'Freelance': { min: 100, max: 2000 },
-  'Investment': { min: 50, max: 1000 },
+  'Electronics': { min: 50, max: 500 },
+  'Clothing': { min: 10, max: 200 },
+  'Books': { min: 5, max: 80 },
+  'Home & Garden': { min: 20, max: 300 },
+  'Sports': { min: 10, max: 150 },
+  'Premium': { min: 200, max: 2000 },
 };
 
 function generateAmount(categoryName: string): number {
@@ -136,32 +130,31 @@ function generateAmount(categoryName: string): number {
 }
 ```
 
-### Monthly Budget Allocation
+### Monthly Amount Allocation
 
 ```typescript
 /**
- * Generate budget amounts that make sense together
+ * Generate order amounts that make sense together
  */
-function generateBudgetAllocation(
-  monthlyIncome: number,
+function generateOrderAllocation(
+  totalAmount: number,
   categories: string[]
 ): Map<string, number> {
   const allocation = new Map<string, number>();
 
   // Standard allocation percentages
   const PERCENTAGES = {
-    'Food & Dining': 0.15,
-    'Transportation': 0.10,
-    'Utilities': 0.10,
-    'Shopping': 0.08,
-    'Entertainment': 0.05,
-    'Health': 0.05,
-    'Savings': 0.20,
+    'Electronics': 0.25,
+    'Clothing': 0.15,
+    'Books': 0.10,
+    'Home & Garden': 0.15,
+    'Sports': 0.10,
+    'Premium': 0.05,
   };
 
   for (const category of categories) {
     const percentage = PERCENTAGES[category] || 0.05;
-    allocation.set(category, Math.round(monthlyIncome * percentage));
+    allocation.set(category, Math.round(totalAmount * percentage));
   }
 
   return allocation;
@@ -236,8 +229,8 @@ function getDaysOfMonth(
   return datesArray.filter(d => days.includes(d.getDate()));
 }
 
-// Usage: Get 1st and 15th for salary
-const salaryDates = getDaysOfMonth(dateRange(60), 1, 15);
+// Usage: Get 1st and 15th for recurring events
+const recurringDates = getDaysOfMonth(dateRange(60), 1, 15);
 ```
 
 ### Future Date Generator
@@ -274,7 +267,7 @@ function randomFutureDate(minMonths: number, maxMonths: number): Date {
 function generateEmail(name: string, index?: number): string {
   const sanitized = name.toLowerCase().replace(/\s+/g, '.');
   const suffix = index !== undefined ? `.${index}` : '';
-  return `${sanitized}${suffix}@test.local`;
+  return `${sanitized}${suffix}@example.local`;
 }
 
 // Common test email domains (safe)
@@ -282,7 +275,7 @@ const SAFE_DOMAINS = [
   'test.local',
   'example.com',
   'test.app',
-  'pennywise.test',
+  'example.test',
 ];
 
 function safeEmail(username: string): string {
@@ -341,7 +334,7 @@ function generatePassword(): string {
 }
 
 // Or use predictable test passwords
-const TEST_PASSWORD = 'TestPassword123!';
+const TEST_PASSWORD = 'Password123!';
 ```
 
 ---
@@ -352,51 +345,51 @@ const TEST_PASSWORD = 'TestPassword123!';
 
 ```typescript
 const DESCRIPTIONS = {
-  'Food & Dining': [
-    'Grocery shopping', 'Dinner at restaurant', 'Coffee shop',
-    'Lunch takeout', 'Fast food', 'Bakery', 'Food delivery',
+  'Electronics': [
+    'Smartphone', 'Laptop', 'Headphones',
+    'Tablet', 'Camera', 'Smart watch', 'Charger',
   ],
-  'Transportation': [
-    'Gas station', 'Uber ride', 'Bus fare', 'Parking fee',
-    'Car maintenance', 'Toll fee', 'Train ticket',
+  'Clothing': [
+    'T-shirt', 'Jeans', 'Sneakers', 'Jacket',
+    'Dress', 'Accessories', 'Hat',
   ],
-  'Shopping': [
-    'Amazon purchase', 'Clothing store', 'Electronics',
-    'Home goods', 'Online shopping', 'Department store',
+  'Books': [
+    'Fiction novel', 'Technical book', 'Biography',
+    'Self-help', 'Cookbook', 'Art book',
   ],
-  'Entertainment': [
-    'Movie tickets', 'Concert', 'Streaming subscription',
-    'Video game', 'Books', 'Sports event',
+  'Home & Garden': [
+    'Plant pot', 'Lamp', 'Cushion',
+    'Tool set', 'Storage box', 'Rug',
   ],
-  'Utilities': [
-    'Electric bill', 'Water bill', 'Internet service',
-    'Phone bill', 'Gas bill', 'Trash service',
+  'Sports': [
+    'Running shoes', 'Yoga mat', 'Water bottle',
+    'Fitness band', 'Backpack', 'Bicycle gear',
   ],
 };
 
 function randomDescription(categoryName: string): string {
-  const options = DESCRIPTIONS[categoryName] || ['General expense'];
+  const options = DESCRIPTIONS[categoryName] || ['General item'];
   return randomPick(options);
 }
 ```
 
-### Goal Names
+### Review Titles
 
 ```typescript
-const GOAL_TEMPLATES = [
-  'Emergency Fund', 'Vacation to {destination}', 'New {item}',
-  'Home Down Payment', 'Wedding Fund', 'Retirement',
-  'Education Fund', 'Car Fund', 'Debt Payoff',
+const REVIEW_TEMPLATES = [
+  'Great {category} product', 'Not worth the price', 'Excellent quality',
+  'Average {category} item', 'Best purchase ever', 'Decent for the price',
+  'Would recommend', 'Could be better', 'Perfect gift',
 ];
 
-const DESTINATIONS = ['Hawaii', 'Europe', 'Japan', 'Mexico', 'Thailand'];
-const ITEMS = ['Car', 'Laptop', 'Phone', 'Furniture', 'Bike'];
+const CATEGORIES = ['electronics', 'clothing', 'books', 'home', 'sports'];
+const ADJECTIVES = ['Amazing', 'Good', 'Solid', 'Disappointing', 'Outstanding'];
 
-function randomGoalName(): string {
-  const template = randomPick(GOAL_TEMPLATES);
+function randomReviewTitle(): string {
+  const template = randomPick(REVIEW_TEMPLATES);
   return template
-    .replace('{destination}', randomPick(DESTINATIONS))
-    .replace('{item}', randomPick(ITEMS));
+    .replace('{category}', randomPick(CATEGORIES))
+    .replace('{item}', randomPick(ADJECTIVES));
 }
 ```
 
@@ -404,15 +397,15 @@ function randomGoalName(): string {
 
 ```typescript
 const TICKET_SUBJECTS = [
-  'Cannot export transactions',
+  'Cannot export data',
   'App crashes on startup',
-  'Budget calculation seems wrong',
+  'Order total seems wrong',
   'Feature request: {feature}',
   'Question about {topic}',
 ];
 
-const FEATURES = ['Dark mode', 'CSV import', 'Recurring transactions'];
-const TOPICS = ['budgets', 'goals', 'reports', 'security'];
+const FEATURES = ['Dark mode', 'CSV import', 'Bulk actions'];
+const TOPICS = ['orders', 'items', 'reports', 'security'];
 
 function randomTicketSubject(): string {
   const template = randomPick(TICKET_SUBJECTS);
@@ -440,8 +433,8 @@ function randomEnumValue<T extends object>(enumObj: T): T[keyof T] {
 }
 
 // Usage
-randomEnumValue(CurrencyEnum);     // 'USD' or 'EUR' etc.
-randomEnumValue(TransactionTypeEnum); // 'INCOME' or 'EXPENSE'
+randomEnumValue(RolesEnum);            // 'admin' or 'user'
+randomEnumValue(OrderStatusEnum);      // 'pending' or 'confirmed'
 ```
 
 ### Weighted Enum Selection
@@ -464,10 +457,10 @@ function weightedEnumPick<T>(
   return options[options.length - 1].value;
 }
 
-// Usage: 80% expenses, 20% income
-const transactionType = weightedEnumPick([
-  { value: TransactionTypeEnum.EXPENSE, weight: 80 },
-  { value: TransactionTypeEnum.INCOME, weight: 20 },
+// Usage: 80% pending, 20% confirmed
+const orderStatus = weightedEnumPick([
+  { value: OrderStatusEnum.PENDING, weight: 80 },
+  { value: OrderStatusEnum.CONFIRMED, weight: 20 },
 ]);
 ```
 
@@ -549,7 +542,7 @@ export const generators = {
 
   // Content
   description: randomDescription,
-  goalName: randomGoalName,
+  reviewTitle: randomReviewTitle,
   ticketSubject: randomTicketSubject,
 
   // Enums

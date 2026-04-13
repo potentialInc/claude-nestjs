@@ -62,7 +62,7 @@ REDIS_STATS_TTL=900        # 15 minutes (computed stats)
 | Type | Duration | Use Case |
 |------|----------|----------|
 | `'default'` | 5 minutes | General purpose, frequently updated data |
-| `'catalog'` | 1 hour | Static catalogs (exercises, features, products) |
+| `'catalog'` | 1 hour | Static catalogs (items, features, products) |
 | `'list'` | 30 minutes | Entity lists (users, assignments, meetings) |
 | `'stats'` | 15 minutes | Computed statistics (dashboard, aggregates) |
 | `number` | Custom seconds | Specific TTL in seconds |
@@ -79,9 +79,9 @@ Use `@Cacheable` on GET endpoints to automatically cache responses.
 import { Cacheable } from 'src/core/decorators';
 
 @Get()
-@Cacheable({ key: 'exercises:all', ttl: 'catalog' })
+@Cacheable({ key: 'items:all', ttl: 'catalog' })
 async findAll() {
-    return this.exerciseService.getActiveExercises();
+    return this.itemService.getActiveItems();
 }
 ```
 
@@ -101,11 +101,11 @@ interface CacheableOptions {
 ```typescript
 @Get('search')
 @Cacheable({
-    keyGenerator: (req) => `exercises:search:${req.query?.q || 'all'}`,
+    keyGenerator: (req) => `items:search:${req.query?.q || 'all'}`,
     ttl: 'catalog',
 })
 async search(@Query('q') query: string) {
-    return this.exerciseService.searchExercises(query);
+    return this.itemService.searchItems(query);
 }
 ```
 
@@ -114,11 +114,11 @@ async search(@Query('q') query: string) {
 ```typescript
 @Get(':id')
 @Cacheable({
-    keyGenerator: (req) => `exercises:${req.params?.id}`,
+    keyGenerator: (req) => `items:${req.params?.id}`,
     ttl: 'catalog',
 })
 async findOne(@Param('id') id: string) {
-    return this.exerciseService.findByIdOrFail(id);
+    return this.itemService.findByIdOrFail(id);
 }
 ```
 
@@ -150,9 +150,9 @@ Use `@CacheInvalidate` on mutation endpoints (POST, PATCH, DELETE) to clear rela
 import { CacheInvalidate } from 'src/core/decorators';
 
 @Post()
-@CacheInvalidate({ patterns: ['exercises:*'] })
-async create(@Body() dto: CreateExerciseDto) {
-    return this.exerciseService.createExercise(dto);
+@CacheInvalidate({ patterns: ['items:*'] })
+async create(@Body() dto: CreateItemDto) {
+    return this.itemService.createItem(dto);
 }
 ```
 
@@ -171,12 +171,12 @@ interface CacheInvalidateOptions {
 @Patch(':id')
 @CacheInvalidate({
     patterns: [
-        'exercises:*',      // All exercise caches
-        'prescriptions:*',  // Related prescription caches
+        'items:*',      // All item caches
+        'categories:*',  // Related entity caches
     ]
 })
-async update(@Param('id') id: string, @Body() dto: UpdateExerciseDto) {
-    return this.exerciseService.updateExercise(id, dto);
+async update(@Param('id') id: string, @Body() dto: UpdateItemDto) {
+    return this.itemService.updateItem(id, dto);
 }
 ```
 
@@ -185,11 +185,11 @@ async update(@Param('id') id: string, @Body() dto: UpdateExerciseDto) {
 ```typescript
 @Delete(':id')
 @CacheInvalidate({
-    patterns: ['exercises:*'],
+    patterns: ['items:*'],
     before: true,  // Invalidate before deletion
 })
 async remove(@Param('id') id: string) {
-    return this.exerciseService.deactivateExercise(id);
+    return this.itemService.deactivateItem(id);
 }
 ```
 
@@ -201,7 +201,7 @@ async remove(@Param('id') id: string) {
 
 | Data Category | TTL | Examples |
 |---------------|-----|----------|
-| Static Catalogs | `'catalog'` (1h) | Exercises, features, products |
+| Static Catalogs | `'catalog'` (1h) | Items, features, products |
 | Entity Lists | `'list'` (30m) | Users, assignments, meetings |
 | Computed Stats | `'stats'` (15m) | Dashboard, aggregates |
 | User-specific | `'default'` (5m) | Profiles, preferences |
@@ -235,10 +235,10 @@ REDIS_STATS_TTL=60
 
 | Pattern | Description |
 |---------|-------------|
-| `ac:exercises:all` | All exercises |
-| `ac:exercises:123` | Single exercise by ID |
-| `ac:exercises:search:stretching` | Search results |
-| `ac:exercises:category:STRETCHING` | Exercises by category |
+| `ac:items:all` | All items |
+| `ac:items:123` | Single item by ID |
+| `ac:items:search:electronics` | Search results |
+| `ac:items:category:ELECTRONICS` | Items by category |
 | `ac:users:page:1:limit:10` | Paginated users |
 | `ac:admin:dashboard` | Admin dashboard stats |
 | `ac:user:456:profile` | User-specific profile |
@@ -246,14 +246,14 @@ REDIS_STATS_TTL=60
 ### Wildcard Patterns for Invalidation
 
 ```typescript
-// Invalidate all exercise-related caches
-patterns: ['exercises:*']
+// Invalidate all item-related caches
+patterns: ['items:*']
 
 // Invalidate specific user's caches
 patterns: ['user:456:*']
 
 // Invalidate multiple patterns
-patterns: ['exercises:*', 'prescriptions:*', 'admin:dashboard']
+patterns: ['items:*', 'categories:*', 'admin:dashboard']
 ```
 
 ---
@@ -346,7 +346,7 @@ async getNotifications() { ... }
 
 // ✅ GOOD: Proper invalidation
 @Post()
-@CacheInvalidate({ patterns: ['exercises:*'] })
+@CacheInvalidate({ patterns: ['items:*'] })
 async create(@Body() dto: CreateDto) { ... }
 ```
 
@@ -354,68 +354,68 @@ async create(@Body() dto: CreateDto) { ... }
 
 ## Complete Examples
 
-### Exercise Controller with Caching
+### Item Controller with Caching
 
 ```typescript
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
 import { Cacheable, CacheInvalidate, AdminOnly } from 'src/core/decorators';
 
-@Controller('exercises')
-export class ExerciseController {
-    constructor(private readonly exerciseService: ExerciseService) {}
+@Controller('items')
+export class ItemController {
+    constructor(private readonly itemService: ItemService) {}
 
     @Get()
-    @Cacheable({ key: 'exercises:all', ttl: 'catalog' })
+    @Cacheable({ key: 'items:all', ttl: 'catalog' })
     async findAll() {
-        return this.exerciseService.getActiveExercises();
+        return this.itemService.getActiveItems();
     }
 
     @Get('search')
     @Cacheable({
-        keyGenerator: (req) => `exercises:search:${req.query?.q || 'all'}`,
+        keyGenerator: (req) => `items:search:${req.query?.q || 'all'}`,
         ttl: 'catalog',
     })
     async search(@Query('q') query: string) {
-        return this.exerciseService.searchExercises(query);
+        return this.itemService.searchItems(query);
     }
 
     @Get('category/:category')
     @Cacheable({
-        keyGenerator: (req) => `exercises:category:${req.params?.category}`,
+        keyGenerator: (req) => `items:category:${req.params?.category}`,
         ttl: 'catalog',
     })
     async findByCategory(@Param('category') category: string) {
-        return this.exerciseService.getExercisesByCategory(category);
+        return this.itemService.getItemsByCategory(category);
     }
 
     @Get(':id')
     @Cacheable({
-        keyGenerator: (req) => `exercises:${req.params?.id}`,
+        keyGenerator: (req) => `items:${req.params?.id}`,
         ttl: 'catalog',
     })
     async findOne(@Param('id') id: string) {
-        return this.exerciseService.findByIdOrFail(id);
+        return this.itemService.findByIdOrFail(id);
     }
 
     @AdminOnly()
     @Post()
-    @CacheInvalidate({ patterns: ['exercises:*'] })
-    async create(@Body() dto: CreateExerciseDto) {
-        return this.exerciseService.createExercise(dto);
+    @CacheInvalidate({ patterns: ['items:*'] })
+    async create(@Body() dto: CreateItemDto) {
+        return this.itemService.createItem(dto);
     }
 
     @AdminOnly()
     @Patch(':id')
-    @CacheInvalidate({ patterns: ['exercises:*'] })
-    async update(@Param('id') id: string, @Body() dto: UpdateExerciseDto) {
-        return this.exerciseService.updateExercise(id, dto);
+    @CacheInvalidate({ patterns: ['items:*'] })
+    async update(@Param('id') id: string, @Body() dto: UpdateItemDto) {
+        return this.itemService.updateItem(id, dto);
     }
 
     @AdminOnly()
     @Delete(':id')
-    @CacheInvalidate({ patterns: ['exercises:*'] })
+    @CacheInvalidate({ patterns: ['items:*'] })
     async remove(@Param('id') id: string) {
-        return this.exerciseService.deactivateExercise(id);
+        return this.itemService.deactivateItem(id);
     }
 }
 ```
@@ -429,7 +429,7 @@ export class ExerciseController {
 ```yaml
 redis:
     image: redis:7-alpine
-    container_name: activitycoaching-redis
+    container_name: app-redis
     restart: unless-stopped
     ports:
         - '${REDIS_PORT:-6379}:6379'

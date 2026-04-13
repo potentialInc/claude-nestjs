@@ -392,73 +392,135 @@ export class UserService extends BaseService<User> {
 
 ## Directory Structure Rationale
 
+### Complete Directory Overview
+
+```
+src/
+├── core/                          # Framework-level code (ALL features use)
+│   ├── base/                      # Base classes (MUST EXTEND)
+│   │   ├── base.entity.ts         # UUID, timestamps, soft delete
+│   │   ├── base.repository.ts     # CRUD operations
+│   │   ├── base.service.ts        # Business logic methods
+│   │   └── base.controller.ts     # HTTP endpoints
+│   ├── decorators/                # Custom decorators
+│   │   ├── current-user.decorator.ts  # @CurrentUser()
+│   │   ├── public.decorator.ts        # @Public()
+│   │   ├── roles.decorator.ts         # @Roles('admin')
+│   │   └── api-swagger.decorator.ts   # @ApiSwagger()
+│   ├── filters/                   # Exception filters
+│   │   └── http-exception.filter.ts
+│   ├── guards/                    # Guards
+│   │   ├── jwt-auth.guard.ts      # JWT authentication
+│   │   └── roles.guard.ts         # Role-based access
+│   ├── interceptors/              # Interceptors
+│   │   ├── transform.interceptor.ts   # Wrap responses
+│   │   └── logging.interceptor.ts     # Log requests
+│   └── pipes/                     # Pipes
+│       └── validation.pipe.ts     # Validate DTOs
+│
+├── modules/                       # Feature modules (one per domain)
+│   ├── auth/                      # Authentication
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.module.ts
+│   │   ├── strategies/
+│   │   │   └── jwt.strategy.ts
+│   │   └── dtos/
+│   ├── users/                     # User management
+│   │   ├── user.entity.ts
+│   │   ├── user.repository.ts
+│   │   ├── user.service.ts
+│   │   ├── user.controller.ts
+│   │   ├── user.module.ts
+│   │   └── dtos/
+│   │       ├── create-user.dto.ts
+│   │       ├── update-user.dto.ts
+│   │       └── user-response.dto.ts
+│   └── {feature}/                 # Same 5-file pattern per feature
+│       ├── {feature}.entity.ts
+│       ├── {feature}.repository.ts
+│       ├── {feature}.service.ts
+│       ├── {feature}.controller.ts
+│       ├── {feature}.module.ts
+│       └── dtos/
+│           ├── create-{feature}.dto.ts
+│           ├── update-{feature}.dto.ts
+│           └── {feature}-response.dto.ts
+│
+├── infrastructure/                # External services
+│   ├── mail/                      # Email service
+│   │   ├── mail.service.ts
+│   │   └── mail.module.ts
+│   ├── s3/                        # File storage
+│   │   ├── s3.service.ts
+│   │   └── s3.module.ts
+│   ├── token/                     # Token management
+│   │   ├── token.service.ts
+│   │   └── token.module.ts
+│   └── logging/                   # Winston logger
+│       └── winston.logger.ts
+│
+├── database/                      # Database management
+│   ├── migrations/                # TypeORM migrations
+│   └── seeders/                   # Database seed files
+│       ├── index.ts               # Main runner (bootstraps app, runs seeders in order)
+│       ├── user.seed.ts           # User seeder
+│       └── ...                    # Additional seeders per domain
+│
+├── common/                        # Shared utilities
+│   └── enums/                     # Centralized enums (synced with frontend)
+│
+├── config/                        # Configuration
+│   └── unified-config.ts          # All env vars (NO direct process.env)
+│
+├── i18n/                          # Internationalization
+│   ├── en/
+│   │   └── translation.json
+│   └── ko/
+│       └── translation.json
+│
+└── main.ts                        # Application entry point
+```
+
 ### Core Directory
 
 **Purpose:** Framework-level code that ALL features use
 
-```
-src/core/
-├── base/                      # Base classes (MUST EXTEND)
-│   ├── base.entity.ts        # UUID, timestamps, soft delete
-│   ├── base.repository.ts    # CRUD operations
-│   ├── base.service.ts       # Business logic methods
-│   └── base.controller.ts    # HTTP endpoints
-├── decorators/                # Custom decorators
-│   ├── current-user.decorator.ts  # @CurrentUser()
-│   ├── public.decorator.ts        # @Public()
-│   ├── roles.decorator.ts         # @Roles('admin')
-│   └── api-swagger.decorator.ts   # @ApiSwagger()
-├── filters/                   # Exception filters
-│   └── http-exception.filter.ts
-├── guards/                    # Guards
-│   ├── jwt-auth.guard.ts     # JWT authentication
-│   └── roles.guard.ts        # Role-based access
-├── interceptors/              # Interceptors
-│   ├── transform.interceptor.ts   # Wrap responses
-│   └── logging.interceptor.ts     # Log requests
-└── pipes/                     # Pipes
-    └── validation.pipe.ts    # Validate DTOs
-```
+Guards, decorators, filters, interceptors, and pipes MUST live here — NEVER inside feature modules.
 
 ### Modules Directory
 
 **Purpose:** Feature-specific code organized by domain
 
-```
-src/modules/
-├── auth/                      # Authentication
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   ├── auth.module.ts
-│   └── dtos/
-├── users/                     # User management
-│   ├── user.entity.ts
-│   ├── user.repository.ts
-│   ├── user.service.ts
-│   ├── user.controller.ts
-│   ├── user.module.ts
-│   └── dtos/
-└── features/                  # Demo feature (can be removed)
-```
+Each feature module MUST have 5 core files (entity, repository, service, controller, module) plus a `dtos/` subfolder (plural).
 
 ### Infrastructure Directory
 
-**Purpose:** External services and utilities
+**Purpose:** External services and third-party integrations
 
-```
-src/infrastructure/
-├── mail/                      # Email service
-│   ├── mail.service.ts
-│   └── mail.module.ts
-├── s3/                        # File storage
-│   ├── s3.service.ts
-│   └── s3.module.ts
-├── token/                     # Token management
-│   ├── token.service.ts
-│   └── token.module.ts
-└── logging/                   # Winston logger
-    └── winston.logger.ts
-```
+### Database Directory
+
+**Purpose:** Migrations and seed data
+
+Seeders MUST be idempotent and read credentials from `_fixtures.yaml` (never hardcode). Seed in dependency order (parents before children).
+
+### Common Directory
+
+**Purpose:** Shared enums and utilities used across multiple modules
+
+Enum files follow `{name}.enum.ts` naming convention.
+
+### Config Directory
+
+**Purpose:** Centralized environment variable access
+
+All modules MUST use `UnifiedConfig` — direct `process.env` access is prohibited.
+
+### I18n Directory
+
+**Purpose:** Localization strings for exception messages
+
+All `throw` statements MUST use `I18nHelper.t()` with keys defined in both locale files.
 
 ---
 
@@ -685,6 +747,88 @@ export class ProductModule {}
 ```
 
 **Total:** 5 files, ~100 lines of code → Full CRUD API with validation, error handling, Swagger docs!
+
+---
+
+---
+
+## PROHIBITED Patterns (Gate Enforced)
+
+The backend gate deterministically checks for these violations. Code that matches these patterns will FAIL the gate:
+
+| Pattern | Checked In | Why Prohibited |
+|---------|-----------|----------------|
+| Controller without `extends BaseController` | `*.controller.ts` | Loses automatic CRUD, Swagger, validation |
+| Service without `extends BaseService` | `*.service.ts` | Loses findByIdOrFail, consistent error handling |
+| `@InjectRepository(Entity)` in services | `*.service.ts` | Services MUST use custom repository classes |
+| `createQueryBuilder()` in services | `*.service.ts` | Query logic belongs in repository layer ONLY |
+
+**Exempt modules:** `auth` and `admin` (cross-entity modules without their own entity).
+
+```typescript
+// ❌ PROHIBITED — will FAIL gate
+@Injectable()
+export class TaskService {
+    constructor(
+        @InjectRepository(Task) private repo: Repository<Task>,  // WRONG
+    ) {}
+
+    async findByProject(projectId: string) {
+        return this.repo.createQueryBuilder('t')  // WRONG — belongs in repository
+            .where('t.project_id = :pid', { pid: projectId })
+            .getMany();
+    }
+}
+
+// ✅ CORRECT
+@Injectable()
+export class TaskService extends BaseService<Task> {
+    constructor(protected readonly repository: TaskRepository) {  // Custom repo
+        super(repository, 'Task');
+    }
+
+    async findByProject(projectId: string) {
+        return this.repository.findByProjectId(projectId);  // Delegates to repo
+    }
+}
+```
+
+---
+
+## MANDATORY: Cross-Cutting Rules
+
+### I18nHelper for ALL Exception Messages
+
+No hardcoded strings in `throw` statements. All messages via `I18nHelper`:
+
+```typescript
+// BAD
+throw new NotFoundException('User not found');
+
+// GOOD
+throw new NotFoundException(I18nHelper.t('user.notFound'));
+```
+
+Messages MUST be added to BOTH locale files:
+- `backend/src/i18n/en/translation.json`
+- `backend/src/i18n/ko/translation.json`
+
+### Layer Size Constraints
+
+| Layer | Max Lines | Refactor Strategy |
+|-------|-----------|-------------------|
+| Controller | 200 | Split into feature sub-controllers |
+| Service | 300 | Extract domain helper services |
+| Repository | 200 | Extract query builder methods |
+| Entity | 150 | Extract embedded/value objects |
+
+### No Direct `process.env`
+
+Use `UnifiedConfig` for all environment variable access. See [best-practices.md](best-practices.md#unifiedconfig--no-direct-processenv).
+
+### Swagger on EVERY Controller Method
+
+Every public endpoint MUST have `@ApiOperation`, `@ApiResponse`, and `@ApiTags` decorators. No exceptions.
 
 ---
 

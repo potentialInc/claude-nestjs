@@ -872,6 +872,55 @@ export class UserController extends BaseController<
 
 ---
 
+---
+
+## MANDATORY: Controller Rules (from Base Architecture)
+
+### Controller Size Limit: 200 Lines
+
+If a controller exceeds 200 lines, split into sub-controllers by feature area:
+- `UserController` (CRUD) + `UserProfileController` (profile-specific)
+- `OrderController` (CRUD) + `OrderPaymentController` (payment-specific)
+
+### Swagger on EVERY Method
+
+```typescript
+@ApiOperation({ summary: 'Get user by ID' })
+@ApiResponse({ status: 200, description: 'User found', type: UserResponseDto })
+@ApiResponse({ status: 404, description: 'User not found' })
+@Get(':id')
+findOne(@Param('id', ParseUUIDPipe) id: string) {
+  return this.userService.findOne(id);
+}
+```
+
+No controller method without `@ApiOperation` and at least one `@ApiResponse`.
+
+### Rate Limiting on Public Endpoints
+
+```typescript
+import { Throttle } from '@nestjs/throttler';
+
+@Public()
+@Throttle({ default: { limit: 10, ttl: 60000 } })
+@Post('login')
+login(@Body() dto: LoginDto) { ... }
+```
+
+Apply to: login, register, forgot-password, verify-email, resend-verification.
+
+### Proper HTTP Status Codes
+
+| Operation | Status | Decorator |
+|-----------|--------|-----------|
+| Create | 201 | `@HttpCode(HttpStatus.CREATED)` |
+| Update | 200 | (default) |
+| Delete | 204 | `@HttpCode(HttpStatus.NO_CONTENT)` |
+| List | 200 | (default) |
+| Not Found | 404 | Throw `NotFoundException` from service |
+
+---
+
 **Related Files:**
 
 - [SKILL.md](../SKILL.md) - Main guide

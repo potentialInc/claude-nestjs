@@ -2,69 +2,86 @@
 
 Claude Code configuration for NestJS backend development. This is a framework-specific submodule designed to be used alongside `claude-base` (shared/generic config).
 
-## Contents
+## Agents (10)
 
-### Agents
-- **backend-developer.md** - End-to-end backend development from PRD to API implementation
-- **auth-route-debugger.md** - Debug authentication issues with API routes
-- **auth-route-tester.md** - Test routes after implementing or modifying them
+| Agent | Model | Team | Description |
+|-------|-------|------|-------------|
+| **backend-developer** | opus | team-backend (leader) | End-to-end NestJS development from PRD to tested API |
+| **auth-route-debugger** | sonnet | team-backend | Debug 401/403 errors, JWT, cookies, route registration |
+| **cache-manager** | sonnet | team-backend | Redis caching, @Cacheable/@CacheInvalidate, TTL optimization |
+| **auto-error-resolver** | sonnet | team-quality | TypeScript compilation error fixing |
+| **compliance-checker** | sonnet | team-quality | Audits 35 mandatory NestJS rules with auto-fix |
+| **gap-finder** | sonnet | team-quality | Missing endpoints, Swagger, DTOs, auth guards |
+| **code-architecture-reviewer** | sonnet | team-quality | Four-layer architecture adherence review |
+| **refactor-planner** | sonnet | team-quality | Refactoring analysis and step-by-step plans |
+| **documentation-architect** | sonnet | team-docs | API docs, architecture diagrams, module README |
+| **gap-finder** | sonnet | team-quality | NestJS-specific implementation gap analysis |
 
-### Skills
+## Guides (19)
 
-```
-skills/
-├── skill-rules.json           # Skill trigger configuration
-├── invocable/                 # Invocable skills (with YAML metadata)
-│   ├── test-routes.md         # JWT authentication testing patterns
-│   └── track-errors/          # Sentry error tracking integration
-│       └── SKILL.md
-├── guidelines/                # Step-by-step instruction guides
-│   ├── generate-api-docs.md   # API documentation generation
-│   ├── generate-e2e-tests.md  # E2E test generation
-│   ├── design-database-schema.md  # Database design with TypeORM
-│   └── convert-prd-to-knowledge.md  # PRD to knowledge conversion
-└── resources/                 # Reference documentation
-    └── implement-redis-caching.md  # Redis caching patterns
-```
+| Guide | Description |
+|-------|-------------|
+| architecture-overview.md | Four-layer pattern, module workflow, I18nHelper, size constraints |
+| best-practices.md | I18nHelper, UnifiedConfig, enum centralization, pagination defaults |
+| routing-and-controllers.md | BaseController, @Public(), Swagger, rate limiting, HTTP status codes |
+| services-and-repositories.md | BaseService/BaseRepository, no direct TypeORM, exception handling |
+| database-patterns.md | Entity patterns, relationships, indexes, soft delete, migrations |
+| validation-patterns.md | class-validator, DTO naming, I18nHelper for messages |
+| authentication-cookies.md | httpOnly cookies, JWT, token refresh, RBAC guards |
+| middleware-guide.md | Guards, interceptors, pipes, filters, execution order |
+| async-and-errors.md | Async/await, error handling patterns |
+| configuration.md | UnifiedConfig, environment management |
+| testing-guide.md | Jest testing strategies, coverage targets |
+| update-swagger.md | Swagger/OpenAPI documentation |
+| sentry-and-monitoring.md | Error tracking and monitoring |
+| setup-role-base-access.md | RBAC implementation guide |
+| nestjs-backend-guide.md | Comprehensive NestJS backend reference |
+| workflow-design-database.md | Design database schema from requirements |
+| workflow-generate-api-docs.md | Generate API documentation from controllers |
+| workflow-generate-e2e-tests.md | Generate end-to-end tests |
+| workflow-implement-redis-caching.md | Implement Redis caching |
+| workflow-convert-prd-to-knowledge.md | Convert PRD to project knowledge |
 
-### Hooks
-- **tsc-check.sh** - TypeScript compilation checking for backend services
+## Skills (8)
 
-### Docs
-- **BEST_PRACTICES.md** - NestJS coding standards, error handling, database patterns
-- **guides/best-practices.md** - Includes CRITICAL RULES: I18nHelper usage (nestjs-i18n multi-language), check existing APIs first
+| Skill | Trigger | Description |
+|-------|---------|-------------|
+| backend-dev-guidelines | `backend:` | NestJS architecture patterns (agent reference) |
+| api-development | `api:` | Build NestJS endpoints (4-layer) |
+| e2e-testing | `e2e:` | Jest + Supertest testing patterns |
+| database-seeding | `seed:` | Create seed files with _fixtures.yaml |
+| debugging | `debug:` | Debug NestJS errors systematically |
+| organize-types | — | Manage DTOs, entities, TypeORM types |
+| enum-sync | — | Bidirectional enum sync (requires base) |
+| compliance-check | `compliance:` | Audit 35 mandatory rules |
+
+## Hooks (7)
+
+| Hook | Type | Description |
+|------|------|-------------|
+| tsc-check.sh | Stop | TypeScript compilation check after edits |
+| project-auto-fix.sh | Stop | Auto-lint, format, type-check on changes |
+| backend-cleanup.ts | Stop | Remove unused files after implementation |
+| backend-cleanup.js | Runtime | Compiled cleanup script |
+| auto-fix-config.json | Config | Auto-fix configuration |
+| backend-cleanup-config.json | Config | Cleanup rules and exclusions |
+| project-auto-fix.ts | Source | Auto-fix TypeScript source |
+
+## Other Contents
+
+- **examples/** — Complete working code examples
+
+## Dependencies
+
+**Required**: The `claude-base` submodule must be present at `.claude/base/` for full functionality. Some skill-rules and agent references use `../../base/` paths (e.g., `sync-enums.md`, `SECURITY_AND_OPTIMIZATION.md`) that resolve to the base submodule.
 
 ## Usage
-
-Add as a git submodule to your project:
 
 ```bash
 git submodule add https://github.com/potentialInc/claude-nestjs.git .claude/nestjs
 ```
 
-### Project Structure
-
-```
-.claude/
-├── base/      # Generic/shared config (git submodule)
-├── nestjs/    # This repo (git submodule)
-├── react/     # React-specific config (git submodule) - optional
-└── settings.json
-```
-
-### Update settings.json
-
-Reference agents and hooks from this submodule:
-
-```json
-{
-  "hooks": {
-    "Stop": ["./nestjs/hooks/tsc-check.sh"]
-  }
-}
-```
-
 ## Related Repos
 
-- [claude-base](https://github.com/potentialInc/claude-base) - Shared/generic Claude Code config
+- [claude-base](https://github.com/potentialInc/claude-base) - Shared/generic Claude Code config (REQUIRED)
 - [claude-react](https://github.com/potentialInc/claude-react) - React-specific Claude Code config

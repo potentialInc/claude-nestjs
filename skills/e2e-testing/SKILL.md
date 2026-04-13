@@ -227,8 +227,8 @@ import { User } from '@/modules/user/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 export const testUsers = {
-    admin: { email: 'admin@test.com', role: 'admin' },
-    user: { email: 'user@test.com', role: 'user' },
+    admin: { email: 'admin@example.com', role: 'admin' },
+    user: { email: 'user@example.com', role: 'user' },
 };
 
 export async function createTestUser(
@@ -460,7 +460,7 @@ For detailed patterns and advanced techniques, see:
    const user = await createTestUser(dataSource, testUsers.admin);
 
    // ❌ BAD - Hardcoded
-   const user = { id: '1', email: 'test@test.com' };
+   const user = { id: '1', email: 'test@example.com' };
    ```
 
 5. **Test Edge Cases**

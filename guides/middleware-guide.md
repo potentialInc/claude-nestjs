@@ -48,41 +48,41 @@ Guards determine whether a request should be handled by the route handler:
 ```typescript
 // src/core/guards/jwt-auth.guard.ts
 import {
-    Injectable,
-    ExecutionContext,
-    UnauthorizedException,
-} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from "@nestjs/common";
+import { AuthGuard } from "@nestjs/passport";
+import { Reflector } from "@nestjs/core";
+import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-    constructor(private reflector: Reflector) {
-        super();
+export class JwtAuthGuard extends AuthGuard("jwt") {
+  constructor(private reflector: Reflector) {
+    super();
+  }
+
+  canActivate(context: ExecutionContext) {
+    // Check if route is marked as @Public()
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true; // Skip authentication for public routes
     }
 
-    canActivate(context: ExecutionContext) {
-        // Check if route is marked as @Public()
-        const isPublic = this.reflector.getAllAndOverride<boolean>(
-            IS_PUBLIC_KEY,
-            [context.getHandler(), context.getClass()],
-        );
+    // Execute passport JWT strategy
+    return super.canActivate(context);
+  }
 
-        if (isPublic) {
-            return true; // Skip authentication for public routes
-        }
-
-        // Execute passport JWT strategy
-        return super.canActivate(context);
+  handleRequest(err: any, user: any, info: any) {
+    if (err || !user) {
+      throw err || new UnauthorizedException("Invalid or expired token");
     }
-
-    handleRequest(err: any, user: any, info: any) {
-        if (err || !user) {
-            throw err || new UnauthorizedException('Invalid or expired token');
-        }
-        return user;
-    }
+    return user;
+  }
 }
 ```
 
@@ -90,39 +90,39 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
 ```typescript
 // src/modules/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Request } from 'express';
-import { envConfigService } from 'src/config/env-config.service';
-import { IJwtPayload } from '@shared/interfaces';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { Request } from "express";
+import { envConfigService } from "src/config/env-config.service";
+import { IJwtPayload } from "@shared/interfaces";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor() {
-        super({
-            jwtFromRequest: ExtractJwt.fromExtractors([
-                (request: Request) => {
-                    // Extract JWT from httpOnly cookie
-                    return request?.cookies?.access_token;
-                },
-            ]),
-            ignoreExpiration: false,
-            secretOrKey: envConfigService.get('JWT_SECRET'),
-        });
+  constructor() {
+    super({
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          // Extract JWT from httpOnly cookie
+          return request?.cookies?.access_token;
+        },
+      ]),
+      ignoreExpiration: false,
+      secretOrKey: envConfigService.get("JWT_SECRET"),
+    });
+  }
+
+  async validate(payload: any): Promise<IJwtPayload> {
+    if (!payload.userId) {
+      throw new UnauthorizedException("Invalid token payload");
     }
 
-    async validate(payload: any): Promise<IJwtPayload> {
-        if (!payload.userId) {
-            throw new UnauthorizedException('Invalid token payload');
-        }
-
-        return {
-            userId: payload.userId,
-            email: payload.email,
-            roles: payload.roles || [],
-        };
-    }
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      roles: payload.roles || [],
+    };
+  }
 }
 ```
 
@@ -130,33 +130,33 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
 ```typescript
 // src/core/guards/roles.guard.ts
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ROLES_KEY } from "../decorators/roles.decorator";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-    constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) {}
 
-    canActivate(context: ExecutionContext): boolean {
-        const requiredRoles = this.reflector.getAllAndOverride<string[]>(
-            ROLES_KEY,
-            [context.getHandler(), context.getClass()],
-        );
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-        if (!requiredRoles) {
-            return true; // No roles required
-        }
-
-        const { user } = context.switchToHttp().getRequest();
-
-        if (!user) {
-            return false; // No user in request
-        }
-
-        // Check if user has at least one required role
-        return requiredRoles.some((role) => user.roles?.includes(role));
+    if (!requiredRoles) {
+      return true; // No roles required
     }
+
+    const { user } = context.switchToHttp().getRequest();
+
+    if (!user) {
+      return false; // No user in request
+    }
+
+    // Check if user has at least one required role
+    return requiredRoles.some((role) => user.roles?.includes(role));
+  }
 }
 ```
 
@@ -214,44 +214,45 @@ Interceptors can:
 ```typescript
 // src/core/interceptors/transform.interceptor.ts
 import {
-    Injectable,
-    NestInterceptor,
-    ExecutionContext,
-    CallHandler,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { ResponsePayloadDto } from '@shared/dtos';
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
+import { ResponsePayloadDto } from "@shared/dtos";
 
 @Injectable()
-export class TransformInterceptor<T>
-    implements NestInterceptor<T, ResponsePayloadDto<T>>
-{
-    intercept(
-        context: ExecutionContext,
-        next: CallHandler,
-    ): Observable<ResponsePayloadDto<T>> {
-        const request = context.switchToHttp().getRequest();
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  ResponsePayloadDto<T>
+> {
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<ResponsePayloadDto<T>> {
+    const request = context.switchToHttp().getRequest();
 
-        return next.handle().pipe(
-            map((data) => {
-                // If data is already wrapped in ResponsePayloadDto, return as is
-                if (data?.success !== undefined) {
-                    return data;
-                }
+    return next.handle().pipe(
+      map((data) => {
+        // If data is already wrapped in ResponsePayloadDto, return as is
+        if (data?.success !== undefined) {
+          return data;
+        }
 
-                // Wrap response in standard format
-                return {
-                    success: true,
-                    statusCode: context.switchToHttp().getResponse().statusCode,
-                    message: data?.message || 'Operation successful',
-                    data: data?.data || data,
-                    timestamp: new Date().toISOString(),
-                    path: request.url,
-                };
-            }),
-        );
-    }
+        // Wrap response in standard format
+        return {
+          success: true,
+          statusCode: context.switchToHttp().getResponse().statusCode,
+          message: data?.message || "Operation successful",
+          data: data?.data || data,
+          timestamp: new Date().toISOString(),
+          path: request.url,
+        };
+      }),
+    );
+  }
 }
 ```
 
@@ -260,43 +261,43 @@ export class TransformInterceptor<T>
 ```typescript
 // src/core/interceptors/logging.interceptor.ts
 import {
-    Injectable,
-    NestInterceptor,
-    ExecutionContext,
-    CallHandler,
-    Logger,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-    private readonly logger = new Logger(LoggingInterceptor.name);
+  private readonly logger = new Logger(LoggingInterceptor.name);
 
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        const request = context.switchToHttp().getRequest();
-        const method = request.method;
-        const url = request.url;
-        const now = Date.now();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const method = request.method;
+    const url = request.url;
+    const now = Date.now();
 
-        return next.handle().pipe(
-            tap({
-                next: () => {
-                    const response = context.switchToHttp().getResponse();
-                    const delay = Date.now() - now;
-                    this.logger.log(
-                        `${method} ${url} ${response.statusCode} - ${delay}ms`,
-                    );
-                },
-                error: (error) => {
-                    const delay = Date.now() - now;
-                    this.logger.error(
-                        `${method} ${url} ${error.status || 500} - ${delay}ms`,
-                    );
-                },
-            }),
-        );
-    }
+    return next.handle().pipe(
+      tap({
+        next: () => {
+          const response = context.switchToHttp().getResponse();
+          const delay = Date.now() - now;
+          this.logger.log(
+            `${method} ${url} ${response.statusCode} - ${delay}ms`,
+          );
+        },
+        error: (error) => {
+          const delay = Date.now() - now;
+          this.logger.error(
+            `${method} ${url} ${error.status || 500} - ${delay}ms`,
+          );
+        },
+      }),
+    );
+  }
 }
 ```
 
@@ -305,43 +306,43 @@ export class LoggingInterceptor implements NestInterceptor {
 ```typescript
 // src/core/interceptors/set-token.interceptor.ts
 import {
-    Injectable,
-    NestInterceptor,
-    ExecutionContext,
-    CallHandler,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
 
 @Injectable()
 export class SetTokenInterceptor implements NestInterceptor {
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-        return next.handle().pipe(
-            tap((data) => {
-                if (data?.accessToken) {
-                    const response = context.switchToHttp().getResponse();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    return next.handle().pipe(
+      tap((data) => {
+        if (data?.accessToken) {
+          const response = context.switchToHttp().getResponse();
 
-                    // Set access token cookie
-                    response.cookie('access_token', data.accessToken, {
-                        httpOnly: true,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'strict',
-                        maxAge: 15 * 60 * 1000, // 15 minutes
-                    });
+          // Set access token cookie
+          response.cookie("access_token", data.accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000, // 15 minutes
+          });
 
-                    // Set refresh token cookie
-                    if (data.refreshToken) {
-                        response.cookie('refresh_token', data.refreshToken, {
-                            httpOnly: true,
-                            secure: process.env.NODE_ENV === 'production',
-                            sameSite: 'strict',
-                            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                        });
-                    }
-                }
-            }),
-        );
-    }
+          // Set refresh token cookie
+          if (data.refreshToken) {
+            response.cookie("refresh_token", data.refreshToken, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "strict",
+              maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+          }
+        }
+      }),
+    );
+  }
 }
 ```
 
@@ -354,11 +355,19 @@ app.useGlobalInterceptors(
     new LoggingInterceptor(),
 );
 
-// Apply to specific controller
+// Apply SetTokenInterceptor on login/register/refresh (sets httpOnly cookies)
 @UseInterceptors(SetTokenInterceptor)
 @Post('login')
 async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+}
+
+// Apply RemoveTokenInterceptor on logout (clears httpOnly cookies)
+@UseInterceptors(RemoveTokenInterceptor)
+@Post('logout')
+async logout(@Req() req: Request) {
+    // RemoveTokenInterceptor clears accessToken + refreshToken cookies automatically
+    return { success: true, message: 'Logged out successfully' };
 }
 
 // Apply to specific method
@@ -385,23 +394,23 @@ Pipes can:
 
 ```typescript
 // src/main.ts
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true, // Strip non-DTO properties
-            forbidNonWhitelisted: true, // Throw error on extra properties
-            transform: true, // Auto-transform to DTO class
-            transformOptions: {
-                enableImplicitConversion: true,
-            },
-        }),
-    );
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strip non-DTO properties
+      forbidNonWhitelisted: true, // Throw error on extra properties
+      transform: true, // Auto-transform to DTO class
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
-    await app.listen(4000);
+  await app.listen(4000);
 }
 ```
 
@@ -476,49 +485,49 @@ Filters handle exceptions and format error responses:
 ```typescript
 // src/core/filters/all-exceptions.filter.ts
 import {
-    ExceptionFilter,
-    Catch,
-    ArgumentsHost,
-    HttpException,
-    HttpStatus,
-    Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from "@nestjs/common";
+import { Request, Response } from "express";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-    private readonly logger = new Logger(AllExceptionsFilter.name);
+  private readonly logger = new Logger(AllExceptionsFilter.name);
 
-    catch(exception: unknown, host: ArgumentsHost) {
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest<Request>();
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
 
-        const status =
-            exception instanceof HttpException
-                ? exception.getStatus()
-                : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const message =
-            exception instanceof HttpException
-                ? exception.message
-                : 'Internal server error';
+    const message =
+      exception instanceof HttpException
+        ? exception.message
+        : "Internal server error";
 
-        // Log error
-        this.logger.error(
-            `${request.method} ${request.url}`,
-            exception instanceof Error ? exception.stack : exception,
-        );
+    // Log error
+    this.logger.error(
+      `${request.method} ${request.url}`,
+      exception instanceof Error ? exception.stack : exception,
+    );
 
-        // Send response
-        response.status(status).json({
-            success: false,
-            statusCode: status,
-            message,
-            timestamp: new Date().toISOString(),
-            path: request.url,
-        });
-    }
+    // Send response
+    response.status(status).json({
+      success: false,
+      statusCode: status,
+      message,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    });
+  }
 }
 ```
 
@@ -527,46 +536,46 @@ export class AllExceptionsFilter implements ExceptionFilter {
 ```typescript
 // src/core/filters/http-exception.filter.ts
 import {
-    ExceptionFilter,
-    Catch,
-    ArgumentsHost,
-    HttpException,
-    Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  Logger,
+} from "@nestjs/common";
+import { Request, Response } from "express";
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-    private readonly logger = new Logger(HttpExceptionFilter.name);
+  private readonly logger = new Logger(HttpExceptionFilter.name);
 
-    catch(exception: HttpException, host: ArgumentsHost) {
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest<Request>();
-        const status = exception.getStatus();
-        const exceptionResponse = exception.getResponse();
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    const status = exception.getStatus();
+    const exceptionResponse = exception.getResponse();
 
-        // Log error
-        this.logger.warn(
-            `${request.method} ${request.url} - ${status} - ${exception.message}`,
-        );
+    // Log error
+    this.logger.warn(
+      `${request.method} ${request.url} - ${status} - ${exception.message}`,
+    );
 
-        // Format response
-        response.status(status).json({
-            success: false,
-            statusCode: status,
-            message:
-                typeof exceptionResponse === 'string'
-                    ? exceptionResponse
-                    : (exceptionResponse as any).message,
-            errors:
-                typeof exceptionResponse === 'object'
-                    ? (exceptionResponse as any).errors
-                    : undefined,
-            timestamp: new Date().toISOString(),
-            path: request.url,
-        });
-    }
+    // Format response
+    response.status(status).json({
+      success: false,
+      statusCode: status,
+      message:
+        typeof exceptionResponse === "string"
+          ? exceptionResponse
+          : (exceptionResponse as any).message,
+      errors:
+        typeof exceptionResponse === "object"
+          ? (exceptionResponse as any).errors
+          : undefined,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    });
+  }
 }
 ```
 
@@ -657,9 +666,9 @@ async findOne() {}
 
 ```typescript
 // src/core/decorators/public.decorator.ts
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
-export const IS_PUBLIC_KEY = 'isPublic';
+export const IS_PUBLIC_KEY = "isPublic";
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 ```
 
@@ -667,9 +676,9 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 ```typescript
 // src/core/decorators/roles.decorator.ts
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
-export const ROLES_KEY = 'roles';
+export const ROLES_KEY = "roles";
 export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
 ```
 
@@ -677,14 +686,14 @@ export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
 
 ```typescript
 // src/core/decorators/current-user.decorator.ts
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { IJwtPayload } from '@shared/interfaces';
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+import { IJwtPayload } from "@shared/interfaces";
 
 export const CurrentUser = createParamDecorator(
-    (data: unknown, ctx: ExecutionContext): IJwtPayload => {
-        const request = ctx.switchToHttp().getRequest();
-        return request.user;
-    },
+  (data: unknown, ctx: ExecutionContext): IJwtPayload => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  },
 );
 ```
 
@@ -692,31 +701,31 @@ export const CurrentUser = createParamDecorator(
 
 ```typescript
 // src/core/decorators/api-swagger.decorator.ts
-import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { applyDecorators } from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 
 export function ApiSwagger(options: {
-    resourceName: string;
-    operation: string;
-    responseDto?: any;
-    requiresAuth?: boolean;
+  resourceName: string;
+  operation: string;
+  responseDto?: any;
+  requiresAuth?: boolean;
 }) {
-    const decorators = [
-        ApiOperation({
-            summary: `${options.operation} ${options.resourceName}`,
-        }),
-        ApiResponse({
-            status: 200,
-            description: 'Success',
-            type: options.responseDto,
-        }),
-    ];
+  const decorators = [
+    ApiOperation({
+      summary: `${options.operation} ${options.resourceName}`,
+    }),
+    ApiResponse({
+      status: 200,
+      description: "Success",
+      type: options.responseDto,
+    }),
+  ];
 
-    if (options.requiresAuth !== false) {
-        decorators.push(ApiBearerAuth());
-    }
+  if (options.requiresAuth !== false) {
+    decorators.push(ApiBearerAuth());
+  }
 
-    return applyDecorators(...decorators);
+  return applyDecorators(...decorators);
 }
 ```
 
@@ -755,4 +764,4 @@ export function ApiSwagger(options: {
 - [SKILL.md](../SKILL.md) - Main guide
 - [routing-and-controllers.md](routing-and-controllers.md) - Controllers and decorators
 - [async-and-errors.md](async-and-errors.md) - Error handling patterns
-- [authentication-guide.md](../../docs/AUTHENTICATION-GUIDE.md) - JWT authentication details
+- [authentication-cookies.md](authentication-cookies.md) - JWT authentication and cookie patterns

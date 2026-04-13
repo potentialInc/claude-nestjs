@@ -845,7 +845,7 @@ describe('UserService Integration', () => {
 
     it('should create and find user', async () => {
         const userData = {
-            email: 'integration@test.com',
+            email: 'integration@example.com',
             name: 'Integration Test',
             password: 'password123',
             roles: ['user'],
@@ -887,6 +887,52 @@ describe('UserService Integration', () => {
 - Skip error handling
 - Use any types
 - Mix HTTP concerns with business logic
+
+---
+
+---
+
+## MANDATORY: Service Rules (from Base Architecture)
+
+### I18nHelper for ALL Exception Messages
+
+```typescript
+// BAD
+throw new NotFoundException('User not found');
+throw new ConflictException(`Email ${email} already exists`);
+
+// GOOD
+throw new NotFoundException(I18nHelper.t('user.notFound'));
+throw new ConflictException(I18nHelper.t('user.emailAlreadyExists'));
+```
+
+### Service Size Limit: 300 Lines
+
+If a service exceeds 300 lines:
+1. Extract domain helper services (e.g., `UserValidationService`, `UserNotificationService`)
+2. Keep the main service as orchestrator
+3. Inject helpers via constructor
+
+### No Direct TypeORM in Services
+
+```typescript
+// BAD: Using @InjectRepository directly in service
+@InjectRepository(UserEntity)
+private readonly userRepo: Repository<UserEntity>;
+
+// GOOD: Using custom repository extending BaseRepository
+constructor(private readonly userRepository: UserRepository) {}
+```
+
+### Check Existing APIs First
+
+Before implementing ANY new endpoint, grep the codebase:
+
+```bash
+grep -r "endpoint-name\|similar-functionality" backend/src/modules/
+```
+
+Prevent duplicate functionality across modules.
 
 ---
 

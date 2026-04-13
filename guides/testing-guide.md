@@ -47,7 +47,7 @@ describe('UserService', () => {
             mockRepository.findByEmail.mockResolvedValue({ id: '123' } as any);
 
             await expect(
-                service.create({ email: 'test@test.com' }),
+                service.create({ email: 'test@example.com' }),
             ).rejects.toThrow('Email already in use');
         });
 
@@ -56,7 +56,7 @@ describe('UserService', () => {
             mockRepository.create.mockResolvedValue({ id: '123' } as any);
 
             const user = await service.create({
-                email: 'test@test.com',
+                email: 'test@example.com',
                 firstName: 'John',
                 lastName: 'Doe',
             });
@@ -64,7 +64,7 @@ describe('UserService', () => {
             expect(user).toBeDefined();
             expect(mockRepository.create).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    email: 'test@test.com',
+                    email: 'test@example.com',
                 }),
             );
         });
@@ -88,7 +88,7 @@ describe('UserService Integration', () => {
         // Create test data
         testUser = await PrismaService.main.user.create({
             data: {
-                email: 'test@test.com',
+                email: 'test@example.com',
                 profile: { create: { firstName: 'Test', lastName: 'User' } },
             },
         });
@@ -100,9 +100,9 @@ describe('UserService Integration', () => {
     });
 
     it('should find user by email', async () => {
-        const user = await userService.findByEmail('test@test.com');
+        const user = await userService.findByEmail('test@example.com');
         expect(user).toBeDefined();
-        expect(user?.email).toBe('test@test.com');
+        expect(user?.email).toBe('test@example.com');
     });
 });
 ```
@@ -195,7 +195,7 @@ describe('PermissionService', () => {
 node scripts/test-auth-route.js http://localhost:3002/form/api/users
 
 # Test with POST data
-node scripts/test-auth-route.js http://localhost:3002/form/api/users POST '{"email":"test@test.com"}'
+node scripts/test-auth-route.js http://localhost:3002/form/api/users POST '{"email":"test@example.com"}'
 ```
 
 ### Mock Authentication in Tests
@@ -235,6 +235,6 @@ npm test -- --coverage
 
 **Related Files:**
 
-- [SKILL.md](SKILL.md)
+- [E2E Testing Skill](../skills/e2e-testing/SKILL.md)
 - [services-and-repositories.md](services-and-repositories.md)
-- [complete-examples.md](complete-examples.md)
+- [complete-examples.md](../examples/complete-examples.md)

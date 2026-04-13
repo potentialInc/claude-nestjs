@@ -68,9 +68,9 @@ From requirements, extract nouns that represent storable data:
 ```markdown
 Example from PRD:
 
-- "Users can submit **daily surveys**" → DailySurvey entity
-- "Coaches schedule **Zoom meetings**" → ZoomMeeting entity
-- "Patients complete **exercises**" → Exercise, ExerciseLog entities
+- "Users can create **orders**" → Order entity
+- "Admins manage **products**" → Product entity
+- "Users write **reviews**" → Review entity
 ```
 
 ---
@@ -84,9 +84,9 @@ Classify entities into categories:
 | Category        | Description                | Examples                |
 | --------------- | -------------------------- | ----------------------- |
 | **User**        | People using the system    | User, Profile           |
-| **Content**     | Main business objects      | Product, Post, Exercise |
+| **Content**     | Main business objects      | Product, Post, Article  |
 | **Junction**    | Many-to-many relationships | UserRole, OrderItem     |
-| **Log/History** | Track changes over time    | AuditLog, ExerciseLog   |
+| **Log/History** | Track changes over time    | AuditLog, ActivityLog   |
 | **Config**      | System configuration       | Settings, Preferences   |
 
 ### 2.2 Entity Naming Conventions
@@ -94,15 +94,15 @@ Classify entities into categories:
 ```typescript
 // Entity class: PascalCase, singular
 export class User extends BaseEntity {}
-export class DailySurvey extends BaseEntity {}
+export class OrderItem extends BaseEntity {}
 
 // Table name: snake_case, plural
 @Entity('users')
-@Entity('daily_surveys')
+@Entity('order_items')
 
 // File name: kebab-case with .entity.ts suffix
 // user.entity.ts
-// daily-survey.entity.ts
+// order-item.entity.ts
 ```
 
 ### 2.3 Module Organization
@@ -113,10 +113,10 @@ src/modules/
 │   └── entities/
 │       ├── user.entity.ts
 │       └── index.ts
-├── exercises/
+├── items/
 │   └── entities/
-│       ├── exercise.entity.ts
-│       ├── exercise-log.entity.ts
+│       ├── item.entity.ts
+│       ├── item-category.entity.ts
 │       └── index.ts
 ```
 
@@ -291,9 +291,9 @@ Look for fields with fixed set of values:
 ```markdown
 From PRD:
 
-- "Status: Scheduled / Completed / Cancelled" → MeetingStatusEnum
-- "Role: PATIENT / COACH" → UserRoleEnum
-- "Muscle pain: None / Mild / Moderate / Severe" → MusclePainEnum
+- "Status: Pending / Confirmed / Cancelled" → OrderStatusEnum
+- "Role: USER / ADMIN" → UserRoleEnum
+- "Priority: Low / Medium / High / Critical" → PriorityEnum
 ```
 
 ### 6.2 Enum File Structure
@@ -309,20 +309,20 @@ src/shared/enums/
 ### 6.3 Enum Implementation
 
 ```typescript
-// src/shared/enums/meeting-status.enum.ts
-export enum MeetingStatusEnum {
-    SCHEDULED = 'SCHEDULED',
-    COMPLETED = 'COMPLETED',
+// src/shared/enums/order-status.enum.ts
+export enum OrderStatusEnum {
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
     CANCELLED = 'CANCELLED',
 }
 
 // Usage in entity
 @Column({
     type: 'enum',
-    enum: MeetingStatusEnum,
-    default: MeetingStatusEnum.SCHEDULED,
+    enum: OrderStatusEnum,
+    default: OrderStatusEnum.PENDING,
 })
-status: MeetingStatusEnum;
+status: OrderStatusEnum;
 ```
 
 ---
@@ -398,7 +398,7 @@ export class EntityName extends BaseEntity {
 export class CreateUsersTable implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         // 1. Create enums first
-        await queryRunner.query(`CREATE TYPE "user_role_enum" AS ENUM ('PATIENT', 'COACH')`);
+        await queryRunner.query(`CREATE TYPE "user_role_enum" AS ENUM ('USER', 'ADMIN')`);
 
         // 2. Create tables
         await queryRunner.createTable(new Table({ ... }), true);
@@ -454,13 +454,13 @@ Before finalizing, verify common queries:
 
 ```typescript
 // Test query patterns from requirements
-// Example: "Get patient's exercises for today"
-const exercises = await exerciseRepository
-    .createQueryBuilder('exercise')
-    .leftJoinAndSelect('exercise.logs', 'log', 'log.date = :date', {
+// Example: "Get user's orders for today"
+const orders = await orderRepository
+    .createQueryBuilder('order')
+    .leftJoinAndSelect('order.items', 'item', 'item.createdAt >= :date', {
         date: today,
     })
-    .where('exercise.patientId = :patientId', { patientId })
+    .where('order.userId = :userId', { userId })
     .getMany();
 ```
 

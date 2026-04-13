@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "stack": "nestjs",
   "agents": {
     "backend-developer": {
@@ -8,6 +8,11 @@
       "tier": "high",
       "domain": "backend",
       "roles": ["implementer", "debugger", "documenter"],
+      "team": "team-backend",
+      "role": "leader",
+      "reports-to": "project-coordinator",
+      "manages": ["database-designer"],
+      "cross-team-contacts": ["frontend-developer", "quality-lead", "documentation-architect"],
       "description": "End-to-end NestJS development from PRD to tested API"
     },
     "code-architecture-reviewer": {
@@ -16,6 +21,9 @@
       "tier": "medium",
       "domain": "backend",
       "roles": ["reviewer"],
+      "team": "team-quality",
+      "role": "member",
+      "reports-to": "quality-lead",
       "description": "Review NestJS code for architectural consistency"
     },
     "auth-route-debugger": {
@@ -24,6 +32,9 @@
       "tier": "medium",
       "domain": "backend",
       "roles": ["debugger"],
+      "team": "team-backend",
+      "role": "member",
+      "reports-to": "backend-developer",
       "description": "Debug authentication and route issues"
     },
     "refactor-planner": {
@@ -32,6 +43,9 @@
       "tier": "medium",
       "domain": "backend",
       "roles": ["planner"],
+      "team": "team-quality",
+      "role": "member",
+      "reports-to": "quality-lead",
       "description": "Plan NestJS-specific refactoring strategies"
     },
     "documentation-architect": {
@@ -40,6 +54,9 @@
       "tier": "medium",
       "domain": "backend",
       "roles": ["documenter"],
+      "team": "team-docs",
+      "role": "member",
+      "reports-to": "documentation-architect",
       "description": "Document NestJS modules and APIs"
     },
     "cache-manager": {
@@ -48,7 +65,21 @@
       "tier": "medium",
       "domain": "backend",
       "roles": ["implementer"],
+      "team": "team-backend",
+      "role": "member",
+      "reports-to": "backend-developer",
       "description": "Manage caching strategies"
+    },
+    "auto-error-resolver": {
+      "file": "auto-error-resolver.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["debugger"],
+      "team": "team-quality",
+      "role": "member",
+      "reports-to": "quality-lead",
+      "description": "Automatically resolves TypeScript compilation errors after implementation"
     },
     "compliance-checker": {
       "file": "compliance-checker.md",
@@ -56,7 +87,21 @@
       "tier": "medium",
       "domain": "qa",
       "roles": ["auditor", "tester"],
-      "description": "Audits NestJS backend for 35 mandatory rule violations and auto-fixes them (base classes, I18nHelper, controllers, auth, config, enum sync, exception filters, interceptors, shared DTOs, migrations, environment validation, decorators, response DTOs, seed architecture, type safety, DTO validation, file uploads, constants)"
+      "team": "team-quality",
+      "role": "member",
+      "reports-to": "quality-lead",
+      "description": "Audits NestJS backend for 35 mandatory rule violations and auto-fixes them"
+    },
+    "gap-finder": {
+      "file": "gap-finder.md",
+      "model": "sonnet",
+      "tier": "medium",
+      "domain": "backend",
+      "roles": ["tester", "verifier"],
+      "team": "team-quality",
+      "role": "member",
+      "reports-to": "quality-lead",
+      "description": "NestJS-specific gap analysis — missing endpoints, Swagger docs, DTO validation, auth guards"
     }
   }
 }

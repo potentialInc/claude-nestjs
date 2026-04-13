@@ -44,11 +44,11 @@ Complete guide to managing configuration in backend microservices.
 
 ```typescript
 // ❌ NEVER DO THIS
-const timeout = parseInt(process.env.TIMEOUT_MS || '5000');
-const dbHost = process.env.DB_HOST || 'localhost';
+const timeout = parseInt(process.env.TIMEOUT_MS || "5000");
+const dbHost = process.env.DB_HOST || "localhost";
 
 // ✅ ALWAYS DO THIS
-import { config } from './config/unifiedConfig';
+import { config } from "./config/unifiedConfig";
 const timeout = config.timeouts.default;
 const dbHost = config.database.host;
 ```
@@ -81,40 +81,40 @@ const timeout = config.timeouts.default; // number, with fallback
 
 ```typescript
 export interface UnifiedConfig {
-    database: {
-        host: string;
-        port: number;
-        username: string;
-        password: string;
-        database: string;
-    };
-    server: {
-        port: number;
-        sessionSecret: string;
-    };
-    tokens: {
-        jwt: string;
-        inactivity: string;
-        internal: string;
-    };
-    keycloak: {
-        realm: string;
-        client: string;
-        baseUrl: string;
-        secret: string;
-    };
-    aws: {
-        region: string;
-        emailQueueUrl: string;
-        accessKeyId: string;
-        secretAccessKey: string;
-    };
-    sentry: {
-        dsn: string;
-        environment: string;
-        tracesSampleRate: number;
-    };
-    // ... more sections
+  database: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    database: string;
+  };
+  server: {
+    port: number;
+    sessionSecret: string;
+  };
+  tokens: {
+    jwt: string;
+    inactivity: string;
+    internal: string;
+  };
+  keycloak: {
+    realm: string;
+    client: string;
+    baseUrl: string;
+    secret: string;
+  };
+  aws: {
+    region: string;
+    emailQueueUrl: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
+  sentry: {
+    dsn: string;
+    environment: string;
+    tracesSampleRate: number;
+  };
+  // ... more sections
 }
 ```
 
@@ -123,37 +123,34 @@ export interface UnifiedConfig {
 **File:** `src/config/unifiedConfig.ts`
 
 ```typescript
-import * as fs from 'fs';
-import * as path from 'path';
-import * as ini from 'ini';
+import * as fs from "fs";
+import * as path from "path";
+import * as ini from "ini";
 
-const configPath = path.join(__dirname, '../../config.ini');
-const iniConfig = ini.parse(fs.readFileSync(configPath, 'utf-8'));
+const configPath = path.join(__dirname, "../../config.ini");
+const iniConfig = ini.parse(fs.readFileSync(configPath, "utf-8"));
 
 export const config: UnifiedConfig = {
-    database: {
-        host: iniConfig.database?.host || process.env.DB_HOST || 'localhost',
-        port: parseInt(
-            iniConfig.database?.port || process.env.DB_PORT || '3306',
-        ),
-        username: iniConfig.database?.username || process.env.DB_USER || 'root',
-        password: iniConfig.database?.password || process.env.DB_PASSWORD || '',
-        database:
-            iniConfig.database?.database || process.env.DB_NAME || 'blog_dev',
-    },
-    server: {
-        port: parseInt(iniConfig.server?.port || process.env.PORT || '3002'),
-        sessionSecret:
-            iniConfig.server?.sessionSecret ||
-            process.env.SESSION_SECRET ||
-            'dev-secret',
-    },
-    // ... more configuration
+  database: {
+    host: iniConfig.database?.host || process.env.DB_HOST || "localhost",
+    port: parseInt(iniConfig.database?.port || process.env.DB_PORT || "3306"),
+    username: iniConfig.database?.username || process.env.DB_USER || "root",
+    password: iniConfig.database?.password || process.env.DB_PASSWORD || "",
+    database: iniConfig.database?.database || process.env.DB_NAME || "blog_dev",
+  },
+  server: {
+    port: parseInt(iniConfig.server?.port || process.env.PORT || "3002"),
+    sessionSecret:
+      iniConfig.server?.sessionSecret ||
+      process.env.SESSION_SECRET ||
+      "dev-secret",
+  },
+  // ... more configuration
 };
 
 // Validate critical config
 if (!config.tokens.jwt) {
-    throw new Error('JWT secret not configured!');
+  throw new Error("JWT secret not configured!");
 }
 ```
 
@@ -237,12 +234,12 @@ sentry.ini
 // Production: Environment variables
 
 export const config: UnifiedConfig = {
-    database: {
-        password: process.env.DB_PASSWORD || iniConfig.database?.password || '',
-    },
-    tokens: {
-        jwt: process.env.JWT_SECRET || iniConfig.tokens?.jwt || '',
-    },
+  database: {
+    password: process.env.DB_PASSWORD || iniConfig.database?.password || "",
+  },
+  tokens: {
+    jwt: process.env.JWT_SECRET || iniConfig.tokens?.jwt || "",
+  },
 };
 ```
 
@@ -301,24 +298,24 @@ getAccessToken(payload: IJwtPayload) {
 
 ### Supported Time Formats
 
-| Format | Example | Description |
-|--------|---------|-------------|
-| Seconds | `3600` | Numeric seconds |
-| Minutes | `"30m"` | 30 minutes |
-| Hours | `"24h"` | 24 hours |
-| Days | `"7d"` | 7 days |
-| Weeks | `"2w"` | 2 weeks |
-| Years | `"1y"` | 1 year |
+| Format  | Example | Description     |
+| ------- | ------- | --------------- |
+| Seconds | `3600`  | Numeric seconds |
+| Minutes | `"30m"` | 30 minutes      |
+| Hours   | `"24h"` | 24 hours        |
+| Days    | `"7d"`  | 7 days          |
+| Weeks   | `"2w"`  | 2 weeks         |
+| Years   | `"1y"`  | 1 year          |
 
 ### Environment File Example
 
 ```bash
 # .env - JWT Configuration
 AUTH_JWT_SECRET="your-secure-secret-here"
-AUTH_TOKEN_COOKIE_NAME="AuthToken"
+AUTH_TOKEN_COOKIE_NAME="your-access-token-cookie-name"
 AUTH_TOKEN_EXPIRED_TIME=24h
 AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME=30d
-AUTH_REFRESH_TOKEN_COOKIE_NAME="RefreshToken"
+AUTH_REFRESH_TOKEN_COOKIE_NAME="your-refresh-token-cookie-name"
 AUTH_REFRESH_TOKEN_EXPIRED_TIME=7d
 ```
 
@@ -328,35 +325,35 @@ AUTH_REFRESH_TOKEN_EXPIRED_TIME=7d
 // src/infrastructure/token/token.service.ts
 @Injectable()
 export class TokenService {
-    constructor(
-        private jwtService: JwtService,
-        private configService: ConfigService,
-    ) {}
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
-    getAccessToken(payload: IJwtPayload, rememberMe?: boolean): string {
-        const expiresIn = rememberMe
-            ? this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME')
-            : this.configService.get<string>('AUTH_TOKEN_EXPIRED_TIME');
+  getAccessToken(payload: IJwtPayload, rememberMe?: boolean): string {
+    const expiresIn = rememberMe
+      ? this.configService.get<string>("AUTH_TOKEN_EXPIRED_TIME_REMEMBER_ME")
+      : this.configService.get<string>("AUTH_TOKEN_EXPIRED_TIME");
 
-        if (!expiresIn) {
-            throw new Error('JWT expiry time not configured. Check your .env file.');
-        }
-
-        // JWT library natively supports string time formats
-        return this.jwtService.sign(payload, { expiresIn });
+    if (!expiresIn) {
+      throw new Error("JWT expiry time not configured. Check your .env file.");
     }
 
-    getRefreshToken(payload: IJwtPayload): string {
-        const refreshExpiresIn = this.configService.get<string>(
-            'AUTH_REFRESH_TOKEN_EXPIRED_TIME',
-        );
+    // JWT library natively supports string time formats
+    return this.jwtService.sign(payload, { expiresIn });
+  }
 
-        if (!refreshExpiresIn) {
-            throw new Error('JWT refresh expiry time not configured.');
-        }
+  getRefreshToken(payload: IJwtPayload): string {
+    const refreshExpiresIn = this.configService.get<string>(
+      "AUTH_REFRESH_TOKEN_EXPIRED_TIME",
+    );
 
-        return this.jwtService.sign(payload, { expiresIn: refreshExpiresIn });
+    if (!refreshExpiresIn) {
+      throw new Error("JWT refresh expiry time not configured.");
     }
+
+    return this.jwtService.sign(payload, { expiresIn: refreshExpiresIn });
+  }
 }
 ```
 
@@ -376,7 +373,7 @@ grep -r "process.env" blog-api/src/ --include="*.ts" | wc -l
 
 ```typescript
 // Scattered throughout code
-const timeout = parseInt(process.env.OPENID_HTTP_TIMEOUT_MS || '15000');
+const timeout = parseInt(process.env.OPENID_HTTP_TIMEOUT_MS || "15000");
 const keycloakUrl = process.env.KEYCLOAK_BASE_URL;
 const jwtSecret = process.env.JWT_SECRET;
 ```
@@ -384,7 +381,7 @@ const jwtSecret = process.env.JWT_SECRET;
 **After:**
 
 ```typescript
-import { config } from './config/unifiedConfig';
+import { config } from "./config/unifiedConfig";
 
 const timeout = config.keycloak.timeout;
 const keycloakUrl = config.keycloak.baseUrl;
@@ -402,6 +399,6 @@ const jwtSecret = config.tokens.jwt;
 
 **Related Files:**
 
-- [SKILL.md](SKILL.md)
+- [API Development Skill](../skills/api-development/SKILL.md)
 - [testing-guide.md](testing-guide.md)
 - [async-and-errors.md](async-and-errors.md)
