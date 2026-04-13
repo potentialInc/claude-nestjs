@@ -1,7 +1,18 @@
 ---
 skill_name: database-seeding
 applies_to_local_project_only: false
-auto_trigger_regex: [seed, seeder, database seed, create seed, test data, fixture data, seed users, seed database, populate database]
+auto_trigger_regex:
+  [
+    seed,
+    seeder,
+    database seed,
+    create seed,
+    test data,
+    fixture data,
+    seed users,
+    seed database,
+    populate database,
+  ]
 tags: [database, seeding, testing, nestjs, typeorm, fixtures, test-data]
 related_skills: [backend-dev-guidelines, e2e-testing]
 ---
@@ -15,6 +26,7 @@ Comprehensive guide for creating database seed files in NestJS/TypeORM projects.
 ## Purpose
 
 Create idempotent, well-structured seed files that populate your database with:
+
 - **System data**: Admin users, default categories, configuration
 - **Test data**: Sample users, orders, and related entities for development/testing
 - **E2E test fixtures**: Predictable data for automated testing
@@ -24,6 +36,7 @@ Create idempotent, well-structured seed files that populate your database with:
 ## When to Use This Skill
 
 Automatically activates when you mention:
+
 - Creating seed files or seeders
 - Populating database with test data
 - Setting up fixture data
@@ -61,31 +74,27 @@ Dependent (seed after parents):
 ├── OrderItem (depends on Order, Item)
 ├── Review (depends on User)
 ├── ReviewComment (depends on Review)
-├── SupportTicket (depends on User)
-├── TicketMessage (depends on SupportTicket)
 ```
 
 ### Step 3: Create Seed Infrastructure
 
 **Directory Structure:**
+
 ```
 backend/src/database/seeders/
-├── index.ts              # Main runner
-├── user.seed.ts          # User seeder
-├── category.seed.ts      # Category seeder
-├── order.seed.ts        # Order seeder
-├── order.seed.ts        # Order seeder
-├── review.seed.ts          # Review + contributions seeder
-└── support.seed.ts       # Support ticket seeder
+├── index.ts                  # Main orchestrator (bootstraps app, runs seeders in order)
+├── user.seed.ts              # User seeder
+├── {domain}.seed.ts          # One seed file per domain entity
 ```
+
+**Rule**: One file per domain. Never combine multiple domains in one file.
 
 ### Step 4: Add npm Scripts
 
 ```json
 {
   "scripts": {
-    "seed": "ts-node -r tsconfig-paths/register src/database/seeders/index.ts",
-    "seed:reset": "ts-node -r tsconfig-paths/register src/database/seeders/reset.ts"
+    "seed": "ts-node -r tsconfig-paths/register src/database/seeders/index.ts"
   }
 }
 ```
@@ -94,199 +103,159 @@ backend/src/database/seeders/
 
 ## Seed File Patterns
 
-### Main Runner (index.ts)
+### Main Orchestrator (index.ts)
+
+The orchestrator bootstraps the NestJS app, extracts services from DI, and calls each domain seeder in dependency order.
 
 ```typescript
-import { NestFactory } from '@nestjs/core';
-import { DataSource } from 'typeorm';
-import { AppModule } from '../../app.module';
-import { UtilsService } from '@infrastructure/utils/utils.service';
+import { NestFactory } from "@nestjs/core";
+import { Logger } from "@nestjs/common";
+import { AppModule } from "../../app.module";
+import { DataSource } from "typeorm";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
 
-// Import seeders
-import { seedUsers } from './user.seed';
-import { seedCategories } from './category.seed';
-import { seedOrders } from './order.seed';
-import { seedOrders } from './order.seed';
-import { seedReviews } from './review.seed';
+// Import domain seeders
+import { seedUsers } from "./user.seed";
+import { seedCategories } from "./category.seed";
+import { seedOrders } from "./order.seed";
 
-async function runSeeder() {
-  console.log('Starting database seeding...\n');
+const logger = new Logger("Seeder");
 
+// --- Fixture Interfaces (exported for domain seeders) ---
+// Define interfaces matching _fixtures.yaml structure per project.
+// Example:
+// export interface FixtureUser { email: string; password: string; name: string; role: string; }
+// export interface Fixtures { users: FixtureUser[]; orders: FixtureOrder[]; ... }
+
+function loadFixtures() {
+  const fixturesPath = path.resolve(
+    __dirname,
+    "../../../../.claude-project/user_stories/_fixtures.yaml",
+  );
+  const content = fs.readFileSync(fixturesPath, "utf8");
+  return yaml.load(content);
+}
+
+async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const dataSource = app.get(DataSource);
-  const utilsService = app.get(UtilsService);
 
   try {
-    // Seed in dependency order
-    const users = await seedUsers(dataSource, utilsService);
-    const categories = await seedCategories(dataSource);
-    await seedOrders(dataSource, users, categories);
-    await seedOrders(dataSource, users, categories);
-    await seedReviews(dataSource, users);
+    const fixtures = loadFixtures();
+    logger.log("Fixtures loaded successfully");
 
-    console.log('\n=== Seeding Complete ===');
+    // Seed in dependency order (parents before children)
+    await seedUsers(dataSource, fixtures);
+    await seedCategories(dataSource, fixtures);
+    await seedOrders(dataSource, fixtures);
+
+    logger.log("Seeding completed successfully!");
   } catch (error) {
-    console.error('Seeding failed:', error);
-    process.exit(1);
+    logger.error("Seeding failed:", error);
+    throw error;
   } finally {
     await app.close();
   }
 }
 
-runSeeder();
+seed();
 ```
 
-### Entity Seeder Pattern
+**Key points:**
+
+- Uses `NestFactory.createApplicationContext(AppModule)` (no HTTP listener needed for seeding)
+- Loads `_fixtures.yaml` once and passes parsed fixtures to each seeder
+- Each seeder receives `(dataSource, fixtures)` — no duplicate file reads
+- Uses NestJS `Logger` (not `console.log`)
+- Calls seeders sequentially in dependency order
+- Wraps in try/catch/finally, closes app in `finally`
+- Exports fixture interfaces so domain seeders can import them
+
+### Entity Seeder Pattern (User — with \_fixtures.yaml)
+
+Each domain gets its own seed file. **All seed data MUST come from `_fixtures.yaml`** — never hardcode credentials inline.
 
 ```typescript
 // user.seed.ts
-import { DataSource } from 'typeorm';
-import { User } from 'src/modules/users/user.entity';
-import { RolesEnum, ActiveStatusEnum } from '@shared/enums';
-import { UtilsService } from '@infrastructure/utils/utils.service';
+import { Logger } from "@nestjs/common";
+import { DataSource } from "typeorm";
+import * as bcrypt from "bcryptjs";
 
-export interface SeededUsers {
-  admin: User;
-  testUser: User;
-}
+import type { Fixtures } from "./index";
+
+const logger = new Logger("UserSeeder");
 
 export async function seedUsers(
   dataSource: DataSource,
-  utilsService: UtilsService,
-): Promise<SeededUsers> {
-  const repo = dataSource.getRepository(User);
+  fixtures: Fixtures,
+): Promise<void> {
+  const userRepo = dataSource.getRepository("User");
 
-  // Idempotency check
-  const existing = await repo.findOne({ where: { email: 'admin@example.com' } });
-  if (existing) {
-    console.log('Users already seeded, fetching existing...');
-    const testUser = await repo.findOne({ where: { email: 'user@example.com' } });
-    return { admin: existing, testUser: testUser! };
-  }
+  for (const u of fixtures.users) {
+    const existing = await userRepo.findOne({ where: { email: u.email } });
+    if (existing) {
+      logger.log(`User ${u.email} already exists, skipping`);
+      continue;
+    }
 
-  console.log('Seeding users...');
-
-  // Admin user
-  const admin = repo.create({
-    email: 'admin@example.com',
-    password: await utilsService.getHash('Admin123!'),
-    displayName: 'Admin User',
-    role: RolesEnum.ADMIN,
-    status: ActiveStatusEnum.ACTIVE,
-    emailVerified: true,
-  });
-  await repo.save(admin);
-  console.log('  - Admin: admin@example.com / Admin123!');
-
-  // Test user (for E2E tests)
-  const testUser = repo.create({
-    email: 'user@example.com',
-    password: await utilsService.getHash('Password123!'),
-    displayName: 'Test User',
-    role: RolesEnum.USER,
-    status: ActiveStatusEnum.ACTIVE,
-    emailVerified: true,
-  });
-  await repo.save(testUser);
-  console.log('  - Test User: user@example.com / Password123!');
-
-  return { admin, testUser };
-}
-```
-
-### Category Seeder (System Data)
-
-```typescript
-// category.seed.ts
-import { DataSource } from 'typeorm';
-import { Category } from 'src/modules/categories/category.entity';
-import { CategoryTypeEnum, ActiveStatusEnum } from '@shared/enums';
-
-const SYSTEM_CATEGORIES = [
-  { name: 'Electronics', icon: 'cpu' },
-  { name: 'Clothing', icon: 'shirt' },
-  { name: 'Books', icon: 'book' },
-  { name: 'Home & Garden', icon: 'home' },
-  { name: 'Sports', icon: 'activity' },
-  { name: 'Featured', icon: 'star' },
-  { name: 'Premium', icon: 'award' },
-  { name: 'General', icon: 'grid' },
-];
-
-export async function seedCategories(dataSource: DataSource): Promise<Category[]> {
-  const repo = dataSource.getRepository(Category);
-
-  // Check if system categories exist
-  const existing = await repo.find({ where: { type: CategoryTypeEnum.SYSTEM } });
-  if (existing.length > 0) {
-    console.log(`System categories already exist (${existing.length})`);
-    return existing;
-  }
-
-  console.log('Seeding system categories...');
-
-  const categories: Category[] = [];
-  for (const cat of SYSTEM_CATEGORIES) {
-    const category = repo.create({
-      name: cat.name,
-      icon: cat.icon,
-      type: CategoryTypeEnum.SYSTEM,
-      status: ActiveStatusEnum.ACTIVE,
-      userId: null, // System categories have no owner
+    const hashedPassword = await bcrypt.hash(u.password, 10);
+    await userRepo.save({
+      name: u.name,
+      email: u.email,
+      password: hashedPassword,
+      role: u.role,
+      emailVerified: true,
+      status: "active",
     });
-    await repo.save(category);
-    categories.push(category);
-    console.log(`  - ${cat.name}`);
+    logger.log(`Created user: ${u.email} (${u.role})`);
   }
-
-  return categories;
 }
 ```
 
-### Order Seeder (Test Data)
+### Dependent Entity Seeder Pattern (with \_fixtures.yaml)
+
+Seeders that depend on parent entities load from `_fixtures.yaml` and look up parents by unique field:
 
 ```typescript
 // order.seed.ts
-import { DataSource } from 'typeorm';
-import { Order } from 'src/modules/orders/order.entity';
-import { OrderStatusEnum } from '@shared/enums';
-import { User } from 'src/modules/users/user.entity';
-import { Item } from 'src/modules/items/item.entity';
-import { SeededUsers } from './user.seed';
+import { Logger } from "@nestjs/common";
+import { DataSource } from "typeorm";
+
+import type { Fixtures } from "./index";
+
+const logger = new Logger("OrderSeeder");
 
 export async function seedOrders(
   dataSource: DataSource,
-  users: SeededUsers,
-  items: Item[],
+  fixtures: Fixtures,
 ): Promise<void> {
-  const repo = dataSource.getRepository(Order);
+  const orderRepo = dataSource.getRepository("Order");
+  const userRepo = dataSource.getRepository("User");
 
-  // Check existing
-  const count = await repo.count({ where: { userId: users.testUser.id } });
-  if (count > 0) {
-    console.log(`Orders already exist for test user (${count})`);
-    return;
-  }
+  for (const o of fixtures.orders ?? []) {
+    const existing = await orderRepo.findOne({ where: { title: o.title } });
+    if (existing) {
+      logger.log(`Order "${o.title}" already exists, skipping`);
+      continue;
+    }
 
-  console.log('Seeding orders...');
+    // Look up parent entity by unique field
+    const owner = await userRepo.findOne({ where: { email: o.owner } });
+    if (!owner) {
+      logger.warn(`Owner not found for order "${o.title}", skipping`);
+      continue;
+    }
 
-  const orders: Partial<Order>[] = [];
-  const statuses = Object.values(OrderStatusEnum);
-
-  for (let i = 0; i < 10; i++) {
-    const item = items[Math.floor(Math.random() * items.length)];
-    orders.push({
-      userId: users.testUser.id,
-      itemId: item.id,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      quantity: Math.floor(Math.random() * 5) + 1,
-      totalAmount: Math.round((Math.random() * 200 + 10) * 100) / 100,
-      createdAt: new Date(Date.now() - i * 86400000),
+    await orderRepo.save({
+      userId: owner.id,
+      title: o.title,
+      status: o.status,
+      amount: o.amount,
     });
+    logger.log(`Created order: ${o.title}`);
   }
-
-  await repo.save(orders.map(o => repo.create(o)));
-  console.log(`  - Created ${orders.length} orders`);
 }
 ```
 
@@ -294,73 +263,86 @@ export async function seedOrders(
 
 ## Key Principles
 
-### 1. Idempotency
+### 1. One File Per Domain
 
-Always check before inserting:
+Each entity domain gets its own `{domain}.seed.ts` file:
+
+```
+backend/src/database/seeders/
+├── index.ts                # Orchestrator only — no seed logic here
+├── user.seed.ts            # Users
+├── category.seed.ts        # Categories
+├── order.seed.ts           # Orders
+└── ...
+```
+
+### 2. Idempotency via findOne Check
+
+Each seeder checks if a record exists before inserting:
 
 ```typescript
-// Good - check by unique field
-const existing = await repo.findOne({ where: { email: 'admin@example.com' } });
-if (existing) return existing;
-
-// Also good - check count for bulk data
-const count = await repo.count({ where: { userId: user.id } });
-if (count > 0) return;
+const existing = await repo.findOne({ where: { email: u.email } });
+if (existing) {
+  logger.log(`Record already exists, skipping`);
+  continue;
+}
 ```
 
-### 2. Dependency Order
+### 3. Dependency Order
 
-Seed entities in order of foreign key dependencies:
+Seed entities in order of foreign key dependencies. The orchestrator calls seeders sequentially:
 
 ```
-1. Users (no FK dependencies)
-2. Categories (optional user FK, system categories have null)
-3. NotificationSettings (depends on User)
-4. Orders (depends on User, Category)
-5. OrderItems (depends on Order, Item)
-6. Reviews (depends on User)
-7. ReviewComments (depends on Review)
-8. SupportTickets (depends on User)
-9. TicketMessages (depends on SupportTicket)
+Level 0 (No dependencies):  User, Category
+Level 1 (Depends on L0):    Order, NotificationSettings
+Level 2 (Depends on L0-1):  OrderItem, Review
+Level 3 (Depends on L0-2):  ReviewComment, TicketMessage
 ```
 
-### 3. Return Created Entities
+### 4. Cross-Entity Lookups
 
-Return seeded entities for use in dependent seeders:
+Dependent seeders find parent entities by unique fields:
 
 ```typescript
-// Returns entities for dependent seeders
-const users = await seedUsers(dataSource, utilsService);
-const categories = await seedCategories(dataSource);
-
-// Use returned entities
-await seedOrders(dataSource, users, categories);
+const owner = await userRepo.findOne({ where: { email: "admin@example.com" } });
+if (!owner) {
+  logger.warn("Admin user not found. Run user seeder first. Skipping.");
+  return;
+}
 ```
 
-### 4. Password Hashing
+### 5. NestJS App Context
+
+Use `NestFactory.createApplicationContext(AppModule)` in the orchestrator (no HTTP listener needed):
+
+```typescript
+const app = await NestFactory.createApplicationContext(AppModule);
+const dataSource = app.get(DataSource);
+```
+
+### 6. Logger from @nestjs/common
+
+Use NestJS Logger (not `console.log`) in each seeder:
+
+```typescript
+import { Logger } from "@nestjs/common";
+const logger = new Logger("UserSeed");
+
+logger.log("Creating users...");
+logger.warn("Owner not found, skipping");
+```
+
+### 7. Password Hashing
 
 Never store plain text passwords:
 
 ```typescript
-// Get hash utility from NestJS DI
-const utilsService = app.get(UtilsService);
-const hashedPassword = await utilsService.getHash('password123');
-```
+// Option A: If project has UtilsService
+const hashedPassword = await utilsService.getHash(seed.password);
 
-### 5. Realistic Test Data
-
-Generate realistic but safe test data:
-
-```typescript
-// Email format that won't accidentally send emails
-email: 'user@example.com'  // or use @example.com
-
-// Realistic amounts
-amount: Math.round((Math.random() * 100 + 10) * 100) / 100
-
-// Date ranges (last 30 days)
-const date = new Date();
-date.setDate(date.getDate() - i);
+// Option B: Use bcrypt directly
+import * as bcrypt from "bcrypt";
+const hashedPassword = await bcrypt.hash(seed.password, 10);
 ```
 
 ---
@@ -370,13 +352,6 @@ date.setDate(date.getDate() - i);
 ```bash
 # Run all seeds
 npm run seed
-
-# Run specific seeder (if configured)
-npm run seed:users
-npm run seed:categories
-
-# Reset and reseed (CAUTION: deletes data)
-npm run seed:reset
 ```
 
 ---
@@ -393,13 +368,13 @@ npm run seed:reset
 
 **Cause**: Running seed twice without idempotency check
 
-**Fix**: Add existence check at start of each seeder
+**Fix**: Add `findOne` check before each insert
 
 ### Password Not Working
 
 **Cause**: Plain text password stored instead of hash
 
-**Fix**: Use `utilsService.getHash()` or bcrypt directly
+**Fix**: Use `utilsService.getHash()` or `bcrypt.hash()`
 
 ---
 
@@ -411,47 +386,35 @@ npm run seed:reset
 
 ---
 
----
-
-## MANDATORY: _fixtures.yaml Convention
+## MANDATORY: \_fixtures.yaml Convention
 
 Seed scripts MUST read credentials from `.claude-project/user_stories/_fixtures.yaml` — NOT hardcode email/password.
 
 ```yaml
 # .claude-project/user_stories/_fixtures.yaml
 users:
-  admin:
-    email: admin@example.com
-    password: Admin123!
+  - name: "Admin User"
+    email: "admin@example.com"
+    password: "Admin123!"
     role: admin
-  user:
-    email: user@example.com
-    password: User123!
+    status: active
+
+  - name: "Test User"
+    email: "user@example.com"
+    password: "Password123!"
     role: user
+    status: active
 ```
 
-Seed script reads this file:
-
-```typescript
-import * as fs from 'fs';
-import * as yaml from 'js-yaml';
-
-const fixtures = yaml.load(fs.readFileSync('.claude-project/user_stories/_fixtures.yaml', 'utf8'));
-
-for (const [key, user] of Object.entries(fixtures.users)) {
-  await userRepository.upsert({
-    email: user.email,
-    password: await bcrypt.hash(user.password, 12),
-    role: user.role,
-  }, ['email']);
-}
-```
+The orchestrator (`index.ts`) loads this file once and passes parsed fixtures to each domain seeder. See the orchestrator and seeder patterns above.
 
 **Rules:**
+
 - Hardcoding email/password in seed script is PROHIBITED
 - Must parse `_fixtures.yaml` as single source of truth
-- Idempotency required: `upsert` or `findOne → skip if exists`
-- Register in `package.json`: `"prisma": { "seed": "ts-node prisma/seed.ts" }`
+- Fixtures loaded once in `index.ts`, passed to each seeder via `(dataSource, fixtures)` signature
+- Idempotency required: `findOne` check before each insert
+- Register in `package.json`: `"seed"` script pointing to `src/database/seeders/index.ts`
 
 ## Related Skills
 
@@ -461,4 +424,3 @@ for (const [key, user] of Object.entries(fixtures.users)) {
 ---
 
 **Skill Status**: Production Ready
-**Line Count**: < 500

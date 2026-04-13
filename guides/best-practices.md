@@ -107,8 +107,10 @@ grep -r "@Get\|@Post\|@Put\|@Patch\|@Delete" backend/src/modules/ --include="*.c
 
 ### Controller Best Practices
 
+**MANDATORY: Controllers MUST extend BaseController. Writing a controller without extending BaseController is PROHIBITED.**
+
 ```typescript
-// GOOD: Extends BaseController, uses decorators, no try/catch
+// ✅ GOOD: Extends BaseController, uses decorators, no try/catch
 @ApiTags('Users')
 @Controller('users')
 export class UserController extends BaseController<
@@ -120,7 +122,7 @@ export class UserController extends BaseController<
         super(userService);
     }
 
-    // Custom endpoint beyond CRUD
+    // Custom endpoint beyond CRUD — override only when needed
     @Post(':id/reset-password')
     @Roles('admin')
     async resetPassword(
@@ -131,7 +133,7 @@ export class UserController extends BaseController<
     }
 }
 
-// BAD: No base class, try/catch, missing decorators
+// ❌ PROHIBITED: No base class — will FAIL backend gate check
 export class UserController {
     async getUser(req, res) {
         try {
@@ -146,12 +148,14 @@ export class UserController {
 
 ### Service Best Practices
 
+**MANDATORY: Services MUST extend BaseService. Services MUST inject custom repository classes — using `@InjectRepository(Entity)` directly in services is PROHIBITED.**
+
 ```typescript
-// GOOD: Extends BaseService, throws HTTP exceptions, dependency injection
+// ✅ GOOD: Extends BaseService, injects custom repository
 @Injectable()
 export class UserService extends BaseService<User> {
     constructor(
-        protected readonly repository: UserRepository,
+        protected readonly repository: UserRepository,  // ✅ Custom repository
         private readonly mailService: MailService,
     ) {
         super(repository, 'User');
@@ -183,7 +187,16 @@ export class UserService extends BaseService<User> {
     }
 }
 
-// BAD: No error handling, direct database access
+// ❌ PROHIBITED: Direct @InjectRepository — will FAIL backend gate check
+@Injectable()
+export class UserService {
+    constructor(
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,  // ❌ WRONG
+    ) {}
+}
+
+// ❌ PROHIBITED: No base class
 export class UserService {
     async getUser(id) {
         return User.findOne(id); // No validation, no error handling
@@ -317,20 +330,31 @@ throw new Error('Error occurred'); // Too generic
 
 ## Database Patterns
 
+**MANDATORY: `createQueryBuilder()` MUST only be used in repository files — using it in services is PROHIBITED. Services access data through custom repository methods.**
+
 ### DO
 
 ```typescript
-// Use repositories for data access
-const user = await this.userRepository.findOne({ where: { email } });
+// ✅ GOOD: createQueryBuilder in REPOSITORY layer
+// user.repository.ts
+@Injectable()
+export class UserRepository extends BaseRepository<User> {
+    async findAdminsWithPosts(): Promise<User[]> {
+        return this.repository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.posts', 'posts')
+            .where('user.role = :role', { role: UserRole.ADMIN })
+            .getMany();
+    }
+}
 
-// Use query builder for complex queries
-const users = await this.userRepository
-    .createQueryBuilder('user')
-    .leftJoinAndSelect('user.posts', 'posts')
-    .where('user.role = :role', { role: UserRole.ADMIN })
-    .getMany();
+// ✅ GOOD: Service calls repository method
+// user.service.ts
+async getAdmins(): Promise<User[]> {
+    return this.repository.findAdminsWithPosts();
+}
 
-// Use transactions for multi-step operations
+// ✅ GOOD: Use transactions for multi-step operations
 const queryRunner = this.dataSource.createQueryRunner();
 await queryRunner.connect();
 await queryRunner.startTransaction();
@@ -350,13 +374,21 @@ try {
 ### DON'T
 
 ```typescript
-// Don't use raw SQL
+// ❌ PROHIBITED: createQueryBuilder in SERVICE — will FAIL backend gate check
+// user.service.ts
+async getAdmins() {
+    return this.repository.createQueryBuilder('user')
+        .where('user.role = :role', { role: 'admin' })
+        .getMany();
+}
+
+// ❌ Don't use raw SQL
 const users = await this.dataSource.query('SELECT * FROM users');
 
-// Don't hard delete (use soft delete)
+// ❌ Don't hard delete (use soft delete)
 await this.repository.delete(id); // Use remove() instead
 
-// Don't forget to release query runners
+// ❌ Don't forget to release query runners
 const queryRunner = this.dataSource.createQueryRunner();
 await queryRunner.startTransaction();
 // ... operations
