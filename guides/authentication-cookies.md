@@ -58,16 +58,35 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException("Invalid token payload");
     }
 
+    // Role normalization — JWT serializes numeric enums as strings in some
+    // sign/verify paths. Coerce to the canonical type for your project so
+    // `role === RoleEnum.X` comparisons are reliable on both BE and FE.
+    // Pick ONE: numeric enum → Number(payload.role); string enum → String(payload.role).
+    const role =
+      typeof payload.role === "string" && /^-?\d+$/.test(payload.role)
+        ? Number(payload.role)
+        : payload.role;
+
     return {
-      id: payload.sub,
+      id: payload.id,            // was payload.sub — keep consistent with the id check above
       email: payload.email,
-      role: payload.role,
+      role,                       // coerced (see Role Contract note below)
       firstName: payload.firstName,
       lastName: payload.lastName,
     };
   }
 }
 ```
+
+### Role coercion note
+
+The JWT signer sometimes stringifies numeric enum values depending on how the payload is built (e.g. when a number is passed through a library that calls `.toString()` on claims). The fix above coerces numeric-looking strings back to numbers inside `validate()` so downstream `@Roles(RoleEnum.Admin)` guards and `user.role === RoleEnum.X` comparisons behave deterministically.
+
+Also recommended as belt-and-suspenders defense:
+- In the login response DTO mapper, explicitly cast: `role: Number(user.role)` (or `String(...)` for string enums).
+- On the frontend, `AuthContext.getHomeRouteForRole(role)` should coerce once before comparing — see `.claude/react/docs/auth-guards.md` → "Role Contract".
+
+If your project uses a **string enum** for roles (e.g. `Role.Admin = 'admin'`), change the coercion above to `String(payload.role)` and stay consistent everywhere — mixing number and string enum values is the root cause of ~50% of silent guard-bypass bugs.
 
 ### 2. SetToken Interceptor (Set Cookies on Login)
 
